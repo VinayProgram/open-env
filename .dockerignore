@@ -1,0 +1,15 @@
+.git
+.uv-cache/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+my_env/.env
+my_env/.venv/
+my_env/.pytest_cache/
+my_env/.ruff_cache/
+my_env/.mypy_cache/
+my_env/openenv_my_env.egg-info/
+my_env/__pycache__/
