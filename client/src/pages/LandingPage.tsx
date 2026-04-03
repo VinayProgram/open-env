@@ -33,7 +33,9 @@ export default function LandingPage() {
               <button onClick={() => scrollToSection('features')} className="text-slate-300 hover:text-white transition cursor-pointer">Features</button>
               <button onClick={() => scrollToSection('how-it-works')} className="text-slate-300 hover:text-white transition cursor-pointer">How It Works</button>
               <button onClick={() => scrollToSection('dashboard')} className="text-slate-300 hover:text-white transition cursor-pointer">Dashboard</button>
-              <Button className="bg-blue-600 hover:bg-blue-700">Get Started</Button>
+              <Link to="/chat">
+                <Button className="bg-blue-600 hover:bg-blue-700">Get Started</Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -57,9 +59,11 @@ export default function LandingPage() {
                 Real-time complaint tracking, AI-powered customer service, and intelligent resolution system for port and logistics operations.
               </p>
               <div className="flex gap-4">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 gap-2">
-                  Start Free Trial <ArrowRight className="w-5 h-5" />
-                </Button>
+                <Link to="/chat">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 gap-2">
+                    Start Free Trial <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
                 <Button variant="outline" className="border-slate-600 text-black hover:bg-slate-700 text-lg px-8 py-6">
                   Watch Demo
                 </Button>
@@ -378,9 +382,11 @@ export default function LandingPage() {
             Join thousands of port operators who trust PortFlow to manage their delivery complaints efficiently and effectively.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 gap-2">
-              Start Free Trial <ArrowRight className="w-5 h-5" />
-            </Button>
+            <Link to="/chat">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 gap-2">
+                Start Free Trial <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
             <Button variant="outline" className="border-slate-600 text-dark hover:bg-slate-700 text-lg px-8 py-6">
               Contact Sales
             </Button>
