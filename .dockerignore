@@ -1,11 +1,14 @@
 .git
 .uv-cache/
 .env
+OpenEnv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.log
+client/node_modules/
+client/.vite/
 my_env/.env
 my_env/.venv/
 my_env/.pytest_cache/

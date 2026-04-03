@@ -28,6 +28,8 @@ Usage:
     python -m server.app
 """
 
+from pathlib import Path
+
 try:
     from openenv.core.env_server.http_server import create_app
 except Exception as e:  # pragma: no cover
@@ -45,6 +47,8 @@ except ImportError:
 from .chat.chat_router import router as chat_router
 from .customer_service.customer_chat_router import router as customer_chat_router
 from .my_env_environment import MyEnvironment
+from fastapi.middleware.cors import CORSMiddleware
+
 
 
 # Create the app with web interface and README integration
@@ -57,7 +61,16 @@ app = create_app(
 )
 app.include_router(chat_router)
 app.include_router(customer_chat_router)
+origins = [
+    "http://localhost:5173",
+]
 
+app.add_middleware(CORSMiddleware,
+                   allow_origins=origins,
+                   allow_credentials=True,
+                   allow_methods=["*"],
+                   allow_headers=["*"],
+                   )
 
 @app.on_event("startup")
 async def startup_event() -> None:
