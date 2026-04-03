@@ -63,6 +63,7 @@ app.include_router(chat_router)
 app.include_router(customer_chat_router)
 origins = [
     "http://localhost:5173",
+    "https://vinaytandale-complaint-system-openenv.hf.space"
 ]
 
 app.add_middleware(CORSMiddleware,
