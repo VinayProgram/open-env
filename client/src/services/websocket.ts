@@ -3,6 +3,8 @@
  * Manages raw WebSocket connections for chat functionality
  */
 
+import { SOCKET_PATH, SOCKET_URL } from '@/config/constants'
+
 type MessageHandler = (data: any) => void
 type ErrorHandler = (error: string) => void
 type CloseHandler = () => void
@@ -147,9 +149,7 @@ export class ChatWebSocket {
  * Create WebSocket URL for chat
  */
 export const createChatWebSocketUrl = (chatId: string): string => {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const host = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-  // Remove protocol from host if present
-  const cleanHost = host.replace(/^https?:\/\//, '')
-  return `${protocol}//${cleanHost}/chat/ws/${chatId}`
+  const normalizedBaseUrl = SOCKET_URL.replace(/\/$/, '')
+  const normalizedPath = SOCKET_PATH.replace(/\/$/, '')
+  return `${normalizedBaseUrl}${normalizedPath}/${chatId}`
 }

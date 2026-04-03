@@ -46,9 +46,8 @@ ENV PATH="/app/env/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/env:$PYTHONPATH"
 
 EXPOSE 8000
-EXPOSE 5173
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')" || exit 1
 
 CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "8000"]

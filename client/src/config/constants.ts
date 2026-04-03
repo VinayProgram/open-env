@@ -10,15 +10,39 @@
 
 /**
  * Base URL for API requests
- * @default 'http://localhost:8000'
+ * @default current origin + '/api'
  */
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const getDefaultApiBaseUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:8000/api'
+  }
+
+  if (window.location.port === '5173') {
+    return 'http://localhost:8000/api'
+  }
+
+  return `${window.location.origin}/api`
+}
+
+const getDefaultSocketUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'ws://localhost:8000'
+  }
+
+  if (window.location.port === '5173') {
+    return 'ws://localhost:8000'
+  }
+
+  return window.location.origin.replace(/^http/, 'ws')
+}
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiBaseUrl()
 
 /**
  * API Endpoints
  */
 export const API_ENDPOINTS = {
-  CHAT_START: '/customer_service/chat/start',
+  CHAT_START: '/customer-chat/create',
   CHAT_MESSAGES: (chatId: string) => `/chat/${chatId}/messages`,
   SEND_MESSAGE: (chatId: string) => `/chat/${chatId}/messages`,
 }
@@ -29,15 +53,15 @@ export const API_ENDPOINTS = {
 
 /**
  * WebSocket server URL
- * @default 'ws://localhost:8000'
+ * @default current origin with ws(s) protocol
  */
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'ws://localhost:8000'
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || getDefaultSocketUrl()
 
 /**
  * WebSocket connection path
- * @default '/chat/ws/'
+ * @default '/api/chat/ws/'
  */
-export const SOCKET_PATH = import.meta.env.VITE_SOCKET_PATH || '/chat/ws/'
+export const SOCKET_PATH = import.meta.env.VITE_SOCKET_PATH || '/api/chat/ws/'
 
 /**
  * Socket configuration object
