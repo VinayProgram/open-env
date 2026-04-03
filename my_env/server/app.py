@@ -58,6 +58,55 @@ CLIENT_DIST_CANDIDATES = (
     Path("/app/client/dist"),
     Path(__file__).resolve().parents[2] / "client" / "dist",
 )
+LEGACY_API_PREFIXES = (
+    "/health",
+    "/schema",
+    "/reset",
+    "/step",
+    "/state",
+    "/mcp",
+    "/metadata",
+    "/openapi.json",
+    "/docs",
+    "/redoc",
+    "/ws",
+    "/web",
+)
+
+
+class LegacyApiCompatMiddleware:
+    """Rewrite legacy root API paths to the mounted `/api` app."""
+
+    def __init__(self, app, api_prefix: str, legacy_prefixes: tuple[str, ...]) -> None:
+        self.app = app
+        self.api_prefix = api_prefix
+        self.legacy_prefixes = legacy_prefixes
+
+    def _rewrite_path(self, path: str) -> str:
+        if not path or path.startswith(self.api_prefix):
+            return path
+
+        for prefix in self.legacy_prefixes:
+            if path == prefix or path.startswith(f"{prefix}/"):
+                return f"{self.api_prefix}{path}"
+
+        return path
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope["type"] not in {"http", "websocket"}:
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+        rewritten_path = self._rewrite_path(path)
+        if rewritten_path == path:
+            await self.app(scope, receive, send)
+            return
+
+        rewritten_scope = dict(scope)
+        rewritten_scope["path"] = rewritten_path
+        rewritten_scope["raw_path"] = rewritten_path.encode("ascii")
+        await self.app(rewritten_scope, receive, send)
 
 
 def _get_client_dist_dir() -> Path:
@@ -185,6 +234,8 @@ python -m my_env.server.app
 api_app.version = "1.0.0"
 api_app.contact = {"name": "OpenEnv Team", "url": "https://github.com/your-repo/OpenEnv"}
 api_app.license_info = {"name": "BSD-3-Clause"}
+
+app = LegacyApiCompatMiddleware(app, api_prefix=API_PREFIX, legacy_prefixes=LEGACY_API_PREFIXES)
 
 
 def main(host: str = "0.0.0.0", port: int = 8000):

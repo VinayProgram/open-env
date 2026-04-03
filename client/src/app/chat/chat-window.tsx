@@ -256,7 +256,5 @@ function ChatWindowContent() {
   )
 }
 
-/**
- * Chat Window - Export directly (no SocketProvider needed)
- */
+
 export default ChatWindowContent
