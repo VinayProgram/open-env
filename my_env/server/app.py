@@ -48,7 +48,7 @@ from .chat.chat_router import router as chat_router
 from .customer_service.customer_chat_router import router as customer_chat_router
 from .my_env_environment import MyEnvironment
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.staticfiles import StaticFiles
 
 
 # Create the app with web interface and README integration
@@ -71,7 +71,7 @@ app.add_middleware(CORSMiddleware,
                    allow_methods=["*"],
                    allow_headers=["*"],
                    )
-
+app.mount("/", StaticFiles(directory="/app/client/dist", html=True), name="frontend")
 @app.on_event("startup")
 async def startup_event() -> None:
     init_db()
