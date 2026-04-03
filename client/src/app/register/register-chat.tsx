@@ -45,9 +45,9 @@ export default function RegisterChat() {
           setPhoneNumber('')
           
           // Navigate to chat window after 1 second
-          if (response.chat_id) {
+          if (response.chat_key) {
             setTimeout(() => {
-              navigate({ to: '/chat/$chatId', params: { chatId: response.chat_id as string } })
+              navigate({ to: `/chat/${response.chat_key}` })
             }, 1000)
           } else {
             // Clear success message after 3 seconds if no chat_id
