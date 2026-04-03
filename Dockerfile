@@ -41,7 +41,7 @@ FROM ${BASE_IMAGE}
 WORKDIR /app/env
 
 COPY --from=builder /app/env /app/env
-
+COPY .env .env
 ENV PATH="/app/env/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/env:$PYTHONPATH"
 
