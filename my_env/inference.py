@@ -128,11 +128,11 @@ def get_model_message(
 
 async def _connect_env() -> MyEnv:
     if ENV_BASE_URL:
-        env = MyEnv(base_url=ENV_BASE_URL)
+        env = await MyEnv.from_docker_image(ENV_BASE_URL)
         await env.connect()
         return env
     if IMAGE_NAME:
-        return await MyEnv.from_docker_image(IMAGE_NAME)
+        return  await MyEnv.from_docker_image(IMAGE_NAME)
     raise RuntimeError("Set either ENV_BASE_URL or IMAGE_NAME before running inference.")
 
 
