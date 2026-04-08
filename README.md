@@ -45,6 +45,15 @@ strictly greater than `0.0` and strictly less than `1.0`.
 - `GET /validate` returns submission-shape metadata for validators
 - `GET /metadata` returns the environment description
 
+## Submission Files
+
+The repo now also includes explicit submission-facing metadata:
+
+- `tasks/` contains the three benchmark task definitions
+- `graders/` contains deterministic score normalization helpers
+- `validate_submission.py` prints a machine-readable report with task/grader coverage
+- `baseline_scores.json` stores the latest multi-task baseline scores
+
 ## Baseline Runner
 
 `inference.py` now runs all three tasks by default and writes per-task scores to

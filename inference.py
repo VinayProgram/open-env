@@ -278,6 +278,7 @@ async def run_task(
     )
     return {
         "task_id": task_id,
+        "grader": "grader_score",
         "score": grader_score,
         "success": success,
         "steps": steps_taken,
@@ -316,6 +317,8 @@ async def main() -> None:
         else 0.0
     )
     summary = {
+        "valid": all(0.0 < float(result["score"]) < 1.0 for result in results),
+        "tasks_with_graders": len(results),
         "results": results,
         "average_score": round(average_score, 4),
         "task_count": len(results),
