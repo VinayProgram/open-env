@@ -19,6 +19,7 @@ from typing import Optional
 from uuid import uuid4
 
 from openenv.core.env_server.interfaces import Environment
+from openenv.core.env_server.types import EnvironmentMetadata
 
 try:
     from ..models import MyAction, MyObservation, MyState
@@ -29,6 +30,9 @@ except ImportError:
 @dataclass(frozen=True)
 class ComplaintScenario:
     complaint_id: str
+    task_name: str
+    task_description: str
+    difficulty: str
     category: str
     customer_name: str
     complaint_text: str
@@ -37,11 +41,19 @@ class ComplaintScenario:
     positive_feedback: tuple[str, ...]
     neutral_feedback: tuple[str, ...]
     negative_feedback: tuple[str, ...]
+    max_steps: int
+    success_threshold: float
 
 
 SCENARIOS: tuple[ComplaintScenario, ...] = (
     ComplaintScenario(
         complaint_id="late-delivery",
+        task_name="Late Delivery Recovery",
+        task_description=(
+            "Handle an urgent late-delivery complaint, acknowledge the frustration, "
+            "reference tracking details, and offer a concrete recovery path."
+        ),
+        difficulty="easy",
         category="delivery",
         customer_name="Maya",
         complaint_text=(
@@ -63,9 +75,17 @@ SCENARIOS: tuple[ComplaintScenario, ...] = (
             "That does not solve the delay. I still need help.",
             "I am frustrated because you have not explained what happens next.",
         ),
+        max_steps=5,
+        success_threshold=0.72,
     ),
     ComplaintScenario(
         complaint_id="damaged-item",
+        task_name="Damaged Item Refund Or Replacement",
+        task_description=(
+            "Resolve a damaged-product complaint without charging return shipping, "
+            "and propose a refund or replacement with clear logistics."
+        ),
+        difficulty="medium",
         category="product",
         customer_name="Rohan",
         complaint_text=(
@@ -87,9 +107,17 @@ SCENARIOS: tuple[ComplaintScenario, ...] = (
             "Why should I pay for returning a damaged product?",
             "That is not acceptable. I need a proper solution.",
         ),
+        max_steps=6,
+        success_threshold=0.75,
     ),
     ComplaintScenario(
         complaint_id="billing-error",
+        task_name="Duplicate Charge Resolution",
+        task_description=(
+            "Reverse a duplicate subscription charge, explain the next billing step, "
+            "and give the customer confidence the issue will not recur."
+        ),
+        difficulty="hard",
         category="billing",
         customer_name="Aisha",
         complaint_text=(
@@ -111,10 +139,13 @@ SCENARIOS: tuple[ComplaintScenario, ...] = (
             "You still have not addressed the duplicate charge.",
             "This is not helpful unless the billing issue is fixed.",
         ),
+        max_steps=7,
+        success_threshold=0.73,
     ),
 )
 
 SCENARIO_INDEX = {scenario.complaint_id: scenario for scenario in SCENARIOS}
+TASK_IDS = tuple(scenario.complaint_id for scenario in SCENARIOS)
 EMPATHY_TERMS = (
     "sorry",
     "apologize",
@@ -142,6 +173,27 @@ DEFAULT_REQUIRED_KEYWORDS = {
     "product": ("replacement", "refund", "damaged", "return"),
     "service": ("callback", "appointment", "escalate", "support"),
 }
+TASK_SCORE_EPSILON = 0.05
+
+
+def get_task_catalog() -> list[dict[str, object]]:
+    """Return the public benchmark task list for submission validation."""
+    return [
+        {
+            "id": scenario.complaint_id,
+            "name": scenario.task_name,
+            "difficulty": scenario.difficulty,
+            "description": scenario.task_description,
+            "max_steps": scenario.max_steps,
+            "success_threshold": scenario.success_threshold,
+            "grader": {
+                "type": "deterministic",
+                "field": "grader_score",
+                "score_range": {"min_exclusive": 0.0, "max_exclusive": 1.0},
+            },
+        }
+        for scenario in SCENARIOS
+    ]
 
 
 class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
@@ -153,7 +205,7 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
         super().__init__()
         self._rng = random.Random()
         self._scenario = SCENARIOS[0]
-        self._max_turns = 6
+        self._max_turns = self._scenario.max_steps
         self._chat_history: list[str] = []
         self._state = MyState(
             episode_id=str(uuid4()),
@@ -172,6 +224,7 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
         self,
         seed: Optional[int] = None,
         episode_id: Optional[str] = None,
+        task_id: Optional[str] = None,
         complaint_id: Optional[str] = None,
         complaint_text: Optional[str] = None,
         complaint_category: Optional[str] = None,
@@ -184,11 +237,12 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
             self._rng.seed(seed)
 
         self._scenario = self._select_scenario(
-            complaint_id=complaint_id,
+            complaint_id=complaint_id or task_id,
             complaint_text=complaint_text,
             complaint_category=complaint_category,
             customer_name=customer_name,
         )
+        self._max_turns = self._scenario.max_steps
         self._chat_history = [
             f"Customer: {self._scenario.customer_name}: {self._scenario.complaint_text}"
         ]
@@ -219,6 +273,19 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
             suggested_next_action=(
                 "Acknowledge the complaint, show empathy, and offer a concrete next step."
             ),
+        )
+
+    def get_metadata(self) -> EnvironmentMetadata:
+        """Return human-friendly metadata for discovery surfaces."""
+        return EnvironmentMetadata(
+            name="Complaint Resolution Benchmark",
+            description=(
+                "A three-task customer-support benchmark where an agent resolves "
+                "delivery, product, and billing complaints and receives a "
+                "deterministic grader_score in the open interval (0, 1)."
+            ),
+            version="1.0.0",
+            author="hackathon-submission",
         )
 
     def step(
@@ -620,7 +687,20 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
         metadata: dict[str, object],
         suggested_next_action: Optional[str] = None,
     ) -> MyObservation:
+        grader_score, score_breakdown = self._calculate_grader_score(latest_agent_message)
+        full_metadata = {
+            **metadata,
+            "task_id": self._scenario.complaint_id,
+            "task_name": self._scenario.task_name,
+            "task_difficulty": self._scenario.difficulty,
+            "success_threshold": self._scenario.success_threshold,
+            "grader_score": grader_score,
+            "score_breakdown": score_breakdown,
+        }
         return MyObservation(
+            task_id=self._scenario.complaint_id,
+            task_name=self._scenario.task_name,
+            task_difficulty=self._scenario.difficulty,
             complaint_id=self._scenario.complaint_id,
             complaint_category=self._scenario.category,
             complaint_text=self._scenario.complaint_text,
@@ -640,7 +720,8 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
             awaiting_customer_response=self._state.awaiting_customer_response,
             done=done,
             reward=reward,
-            metadata=metadata,
+            metadata=full_metadata,
+            grader_score=grader_score,
         )
 
     def _latest_message_for_role(self, role: str) -> str:
@@ -681,3 +762,92 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
     @staticmethod
     def _clamp(value: float, low: float = -1.0, high: float = 1.0) -> float:
         return max(low, min(high, value))
+
+    def _calculate_grader_score(
+        self, latest_agent_message: str
+    ) -> tuple[float, dict[str, float | str]]:
+        """Compute a deterministic task score that always stays inside (0, 1)."""
+        agent_messages = self._all_agent_messages()
+        latest_message = latest_agent_message.strip() or (
+            agent_messages[-1] if agent_messages else ""
+        )
+
+        quality_raw = 0.0
+        if latest_message:
+            quality_raw, _, _, _ = self._evaluate_agent_message(latest_message)
+
+        satisfaction_score = self._normalize_to_unit_interval(
+            self._state.satisfaction_score,
+            low=-2.0,
+            high=3.0,
+        )
+        quality_score = self._normalize_to_unit_interval(
+            quality_raw,
+            low=-1.0,
+            high=1.0,
+        )
+        coverage_score = self._keyword_coverage_ratio(agent_messages)
+
+        if self._state.resolution_status == "resolved":
+            status_score = 0.92
+        elif self._state.resolution_status == "escalated":
+            status_score = 0.18
+        elif self._state.resolution_status == "in_progress":
+            status_score = 0.48
+        else:
+            status_score = 0.32
+
+        if self._scenario.max_steps <= 1:
+            efficiency_score = 1.0
+        else:
+            step_ratio = min(self._state.step_count, self._scenario.max_steps) / float(
+                self._scenario.max_steps
+            )
+            efficiency_score = 1.0 - (0.35 * step_ratio)
+
+        score = (
+            (0.35 * status_score)
+            + (0.25 * coverage_score)
+            + (0.20 * quality_score)
+            + (0.15 * satisfaction_score)
+            + (0.05 * efficiency_score)
+        )
+
+        if self._state.resolution_status == "resolved" and coverage_score >= 0.75:
+            score += 0.04
+        elif self._state.resolution_status == "escalated":
+            score -= 0.08
+
+        score = self._clamp(
+            score,
+            low=TASK_SCORE_EPSILON,
+            high=1.0 - TASK_SCORE_EPSILON,
+        )
+        score = round(float(score), 4)
+        return score, {
+            "status": self._state.resolution_status,
+            "status_score": round(status_score, 4),
+            "coverage_score": round(coverage_score, 4),
+            "quality_score": round(quality_score, 4),
+            "satisfaction_score": round(satisfaction_score, 4),
+            "efficiency_score": round(efficiency_score, 4),
+        }
+
+    def _all_agent_messages(self) -> list[str]:
+        prefix = "Agent: "
+        return [line[len(prefix) :] for line in self._chat_history if line.startswith(prefix)]
+
+    def _keyword_coverage_ratio(self, agent_messages: list[str]) -> float:
+        if not self._scenario.required_keywords:
+            return 0.5
+
+        transcript = " ".join(agent_messages).lower()
+        hits = sum(1 for keyword in self._scenario.required_keywords if keyword in transcript)
+        return hits / float(len(self._scenario.required_keywords))
+
+    @staticmethod
+    def _normalize_to_unit_interval(value: float, low: float, high: float) -> float:
+        if high <= low:
+            return 0.5
+        clipped = max(low, min(high, value))
+        return (clipped - low) / (high - low)

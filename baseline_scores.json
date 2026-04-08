@@ -1,0 +1,54 @@
+{
+  "results": [
+    {
+      "task_id": "late-delivery",
+      "score": 0.8155,
+      "success": true,
+      "steps": 6,
+      "resolution_status": "resolved",
+      "average_reward": 0.6217,
+      "rewards": [
+        1.0,
+        0.5,
+        0.15,
+        0.61,
+        0.61,
+        0.86
+      ]
+    },
+    {
+      "task_id": "damaged-item",
+      "score": 0.379,
+      "success": true,
+      "steps": 6,
+      "resolution_status": "escalated",
+      "average_reward": 0.6267,
+      "rewards": [
+        0.86,
+        0.86,
+        0.51,
+        0.51,
+        0.51,
+        0.51
+      ]
+    },
+    {
+      "task_id": "billing-error",
+      "score": 0.684,
+      "success": true,
+      "steps": 6,
+      "resolution_status": "in_progress",
+      "average_reward": 0.45,
+      "rewards": [
+        1.0,
+        -0.1,
+        1.0,
+        -0.1,
+        1.0,
+        -0.1
+      ]
+    }
+  ],
+  "average_score": 0.6262,
+  "task_count": 3
+}

@@ -88,6 +88,9 @@ class MyEnv(
         """
         obs_data = payload.get("observation", {})
         observation = MyObservation(
+            task_id=obs_data.get("task_id", obs_data.get("complaint_id", "")),
+            task_name=obs_data.get("task_name", ""),
+            task_difficulty=obs_data.get("task_difficulty", "medium"),
             complaint_id=obs_data.get("complaint_id", ""),
             complaint_category=obs_data.get("complaint_category", ""),
             complaint_text=obs_data.get("complaint_text", ""),
@@ -99,6 +102,7 @@ class MyEnv(
             suggested_next_action=obs_data.get("suggested_next_action", ""),
             chat_history=obs_data.get("chat_history", []),
             awaiting_customer_response=obs_data.get("awaiting_customer_response", False),
+            grader_score=obs_data.get("grader_score"),
             done=payload.get("done", False),
             reward=payload.get("reward"),
             metadata=obs_data.get("metadata", {}),

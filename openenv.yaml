@@ -1,7 +1,78 @@
 spec_version: 1
 name: my_env
+version: "1.0.0"
+description: >
+  Complaint-resolution benchmark with three graded customer-support tasks.
+  Agents must resolve delivery, product, and billing complaints while the
+  environment emits shaped rewards and a deterministic grader_score strictly
+  inside the interval (0, 1).
+author: hackathon-submission
 type: space
 runtime: fastapi
 app: server.app:app
 port: 8000
 
+client:
+  class_name: MyEnv
+  module: client
+
+action:
+  class_name: MyAction
+  module: models
+
+observation:
+  class_name: MyObservation
+  module: models
+
+grader:
+  type: deterministic
+  field: grader_score
+  score_range:
+    min_exclusive: 0.0
+    max_exclusive: 1.0
+  notes:
+    - step reward remains shaped and may be outside [0, 1]
+    - submission task validation should use grader_score
+
+tasks:
+  - id: late-delivery
+    name: Late Delivery Recovery
+    difficulty: easy
+    description: >
+      Acknowledge an urgent shipment delay, reference tracking, and offer a
+      concrete recovery path such as expedite, refund, or escalation.
+    max_steps: 5
+    success_threshold: 0.72
+    grader: grader_score
+  - id: damaged-item
+    name: Damaged Item Refund Or Replacement
+    difficulty: medium
+    description: >
+      Resolve a damaged-product complaint with a refund or replacement and make
+      it clear the customer will not pay return shipping.
+    max_steps: 6
+    success_threshold: 0.75
+    grader: grader_score
+  - id: billing-error
+    name: Duplicate Charge Resolution
+    difficulty: hard
+    description: >
+      Reverse a duplicate subscription charge, explain the billing follow-up,
+      and reassure the customer that the issue will not recur.
+    max_steps: 7
+    success_threshold: 0.73
+    grader: grader_score
+
+endpoints:
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+  metadata: GET /metadata
+  tasks: GET /tasks
+  validate: GET /validate
+
+tags:
+  - openenv
+  - benchmark
+  - customer-support
+  - complaint-resolution

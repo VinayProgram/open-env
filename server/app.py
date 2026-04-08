@@ -15,6 +15,8 @@ Endpoints:
     - POST /api/step: Execute an action
     - GET /api/state: Get current environment state
     - GET /api/schema: Get action/observation schemas
+    - GET /api/tasks: List public benchmark tasks
+    - GET /api/validate: Report submission-shape metadata
     - WS /api/ws: WebSocket endpoint for persistent sessions
     - GET /*: React frontend with index.html fallback routing
 
@@ -51,7 +53,7 @@ from fastapi.responses import FileResponse
 
 from .chat.chat_router import router as chat_router
 from .customer_service.customer_chat_router import router as customer_chat_router
-from .my_env_environment import MyEnvironment
+from .my_env_environment import MyEnvironment, get_task_catalog
 
 API_PREFIX = "/api"
 CLIENT_DIST_CANDIDATES = (
@@ -64,6 +66,8 @@ LEGACY_API_PREFIXES = (
     "/reset",
     "/step",
     "/state",
+    "/tasks",
+    "/validate",
     "/mcp",
     "/metadata",
     "/openapi.json",
@@ -144,6 +148,32 @@ api_app = create_app(
 api_app.include_router(chat_router)
 api_app.include_router(customer_chat_router)
 
+
+@api_app.get("/tasks", tags=["Benchmark"])
+async def list_tasks() -> dict[str, object]:
+    """Expose the benchmark task catalog for submission validators."""
+    tasks = get_task_catalog()
+    return {
+        "task_count": len(tasks),
+        "tasks": tasks,
+    }
+
+
+@api_app.get("/validate", tags=["Benchmark"])
+async def validate_submission_shape() -> dict[str, object]:
+    """Report the submission shape expected by hackathon validators."""
+    tasks = get_task_catalog()
+    return {
+        "valid": len(tasks) >= 3,
+        "env_name": "my_env",
+        "version": "1.0.0",
+        "task_count": len(tasks),
+        "tasks_with_graders": len(tasks),
+        "grader_field": "grader_score",
+        "score_range": {"min_exclusive": 0.0, "max_exclusive": 1.0},
+        "tasks": tasks,
+    }
+
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 origins = [
     "http://localhost:5173",
@@ -210,6 +240,8 @@ and WebSocket endpoints, compatible with EnvClient.
 - **POST /api/step**: Execute an action
 - **GET /api/state**: Get current environment state
 - **GET /api/schema**: Get action/observation schemas
+- **GET /api/tasks**: List benchmark tasks and graders
+- **GET /api/validate**: Report submission-shape metadata
 - **POST /api/customer-chat/create**: Create a chat session
 - **GET /api/chat/{chat_key}/messages**: Get persisted messages
 - **WS /api/chat/ws/{chat_key}**: WebSocket chat endpoint

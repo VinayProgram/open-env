@@ -76,6 +76,11 @@ class MyAction(Action):
 class MyObservation(Observation):
     """Observation returned after each complaint-resolution step."""
 
+    task_id: str = Field(default="", description="Benchmark task identifier")
+    task_name: str = Field(default="", description="Human-readable task name")
+    task_difficulty: str = Field(
+        default="medium", description="Relative task difficulty label"
+    )
     complaint_id: str = Field(default="", description="Unique complaint identifier")
     complaint_category: str = Field(
         default="", description="Complaint category such as billing or delivery"
@@ -113,6 +118,15 @@ class MyObservation(Observation):
     awaiting_customer_response: bool = Field(
         default=False,
         description="Whether the environment is waiting for a real customer reply",
+    )
+    grader_score: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Deterministic benchmark score for the current task. The terminal score "
+            "is always clamped strictly inside the interval (0, 1)."
+        ),
     )
 
 

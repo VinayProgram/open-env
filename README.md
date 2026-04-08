@@ -1,6 +1,6 @@
 ---
-title: My Env Environment Server
-emoji: 🎭
+title: Complaint Resolution Benchmark
+emoji: "🎧"
 colorFrom: blue
 colorTo: indigo
 sdk: docker
@@ -9,253 +9,62 @@ app_port: 8000
 base_path: /web
 tags:
   - openenv
+  - benchmark
+  - customer-support
 ---
 
-# My Env Environment
+# Complaint Resolution Benchmark
 
-A simple test environment that echoes back messages. Perfect for testing the env APIs as well as demonstrating environment usage patterns.
+This environment is a small customer-support benchmark with three explicit tasks
+and a deterministic `grader_score` for submission validation.
 
-## Quick Start
+The agent receives a complaint, sends support replies, and the environment
+tracks:
 
-The simplest way to use the My Env environment is through the `MyEnv` class:
+- shaped step rewards in `[-1, 1]`
+- a running customer satisfaction score
+- a task-level `grader_score` strictly inside `(0, 1)`
 
-```python
-from my_env import MyAction, MyEnv
+## Tasks
 
-try:
-    # Create environment from Docker image
-    my_envenv = MyEnv.from_docker_image("my_env-env:latest")
+| Task ID | Name | Difficulty | Max Steps | Grader |
+|---|---|---|---:|---|
+| `late-delivery` | Late Delivery Recovery | easy | 5 | `grader_score` |
+| `damaged-item` | Damaged Item Refund Or Replacement | medium | 6 | `grader_score` |
+| `billing-error` | Duplicate Charge Resolution | hard | 7 | `grader_score` |
 
-    # Reset
-    result = my_envenv.reset()
-    print(f"Reset: {result.observation.echoed_message}")
+Every task uses the same output contract: when the episode advances, the
+observation includes `grader_score`, and terminal scores are clamped to remain
+strictly greater than `0.0` and strictly less than `1.0`.
 
-    # Send multiple messages
-    messages = ["Hello, World!", "Testing echo", "Final message"]
+## API Notes
 
-    for msg in messages:
-        result = my_envenv.step(MyAction(message=msg))
-        print(f"Sent: '{msg}'")
-        print(f"  → Echoed: '{result.observation.echoed_message}'")
-        print(f"  → Length: {result.observation.message_length}")
-        print(f"  → Reward: {result.reward}")
+- `POST /reset` accepts either `task_id` or `complaint_id`
+- `POST /step` submits `agent_message` and returns the next observation
+- `GET /tasks` returns the benchmark task catalog
+- `GET /validate` returns submission-shape metadata for validators
+- `GET /metadata` returns the environment description
 
-finally:
-    # Always clean up
-    my_envenv.close()
-```
+## Baseline Runner
 
-That's it! The `MyEnv.from_docker_image()` method handles:
-- Starting the Docker container
-- Waiting for the server to be ready
-- Connecting to the environment
-- Container cleanup when you call `close()`
+`inference.py` now runs all three tasks by default and writes per-task scores to
+`baseline_scores.json`.
 
-## Building the Docker Image
+Environment variables:
 
-Before using the environment, you need to build the Docker image:
+- `MY_ENV_TASK_IDS` or `MY_ENV_COMPLAINT_IDS`: comma-separated task list
+- `MY_ENV_TASK_ID` or `MY_ENV_COMPLAINT_ID`: run a single task
+- `STOP_ON_DONE=true`: stop early when the environment signals `done`
 
-```bash
-# From the my_env directory
-docker build -t my_env-env:latest .
-```
+If no API key is available, the runner falls back to a built-in heuristic
+baseline so the benchmark can still emit non-edge task scores.
 
-If you want to use the Dockerfile kept under `server/`, use the `my_env` directory as the build context:
+## Local Run
 
 ```bash
-docker build -t my_env-env:latest -f server/Dockerfile .
+uvicorn server.app:app --reload --host 0.0.0.0 --port 8000
 ```
-
-## Deploying to Hugging Face Spaces
-
-You can easily deploy your OpenEnv environment to Hugging Face Spaces using the `openenv push` command:
 
 ```bash
-# From the environment directory (where openenv.yaml is located)
-openenv push
-
-# Or specify options
-openenv push --namespace my-org --private
-```
-
-The `openenv push` command will:
-1. Validate that the directory is an OpenEnv environment (checks for `openenv.yaml`)
-2. Prepare a custom build for Hugging Face Docker space (enables web interface)
-3. Upload to Hugging Face (ensuring you're logged in)
-
-### Prerequisites
-
-- Authenticate with Hugging Face: The command will prompt for login if not already authenticated
-
-### Options
-
-- `--directory`, `-d`: Directory containing the OpenEnv environment (defaults to current directory)
-- `--repo-id`, `-r`: Repository ID in format 'username/repo-name' (defaults to 'username/env-name' from openenv.yaml)
-- `--base-image`, `-b`: Base Docker image to use (overrides Dockerfile FROM)
-- `--private`: Deploy the space as private (default: public)
-
-### Examples
-
-```bash
-# Push to your personal namespace (defaults to username/env-name from openenv.yaml)
-openenv push
-
-# Push to a specific repository
-openenv push --repo-id my-org/my-env
-
-# Push with a custom base image
-openenv push --base-image ghcr.io/meta-pytorch/openenv-base:latest
-
-# Push as a private space
-openenv push --private
-
-# Combine options
-openenv push --repo-id my-org/my-env --base-image custom-base:latest --private
-```
-
-After deployment, your space will be available at:
-`https://huggingface.co/spaces/<repo-id>`
-
-The deployed space includes:
-- **Web Interface** at `/web` - Interactive UI for exploring the environment
-- **API Documentation** at `/docs` - Full OpenAPI/Swagger interface
-- **Health Check** at `/health` - Container health monitoring
-- **WebSocket** at `/ws` - Persistent session endpoint for low-latency interactions
-
-## Environment Details
-
-### Action
-**MyAction**: Contains a single field
-- `message` (str) - The message to echo back
-
-### Observation
-**MyObservation**: Contains the echo response and metadata
-- `echoed_message` (str) - The message echoed back
-- `message_length` (int) - Length of the message
-- `reward` (float) - Reward based on message length (length × 0.1)
-- `done` (bool) - Always False for echo environment
-- `metadata` (dict) - Additional info like step count
-
-### Reward
-The reward is calculated as: `message_length × 0.1`
-- "Hi" → reward: 0.2
-- "Hello, World!" → reward: 1.3
-- Empty message → reward: 0.0
-
-## Advanced Usage
-
-### Connecting to an Existing Server
-
-If you already have a My Env environment server running, you can connect directly:
-
-```python
-from my_env import MyEnv
-
-# Connect to existing server
-my_envenv = MyEnv(base_url="<ENV_HTTP_URL_HERE>")
-
-# Use as normal
-result = my_envenv.reset()
-result = my_envenv.step(MyAction(message="Hello!"))
-```
-
-Note: When connecting to an existing server, `my_envenv.close()` will NOT stop the server.
-
-### Using the Context Manager
-
-The client supports context manager usage for automatic connection management:
-
-```python
-from my_env import MyAction, MyEnv
-
-# Connect with context manager (auto-connects and closes)
-with MyEnv(base_url="http://localhost:8000") as env:
-    result = env.reset()
-    print(f"Reset: {result.observation.echoed_message}")
-    # Multiple steps with low latency
-    for msg in ["Hello", "World", "!"]:
-        result = env.step(MyAction(message=msg))
-        print(f"Echoed: {result.observation.echoed_message}")
-```
-
-The client uses WebSocket connections for:
-- **Lower latency**: No HTTP connection overhead per request
-- **Persistent session**: Server maintains your environment state
-- **Efficient for episodes**: Better for many sequential steps
-
-### Concurrent WebSocket Sessions
-
-The server supports multiple concurrent WebSocket connections. To enable this,
-modify `server/app.py` to use factory mode:
-
-```python
-# In server/app.py - use factory mode for concurrent sessions
-app = create_app(
-    MyEnvironment,  # Pass class, not instance
-    MyAction,
-    MyObservation,
-    max_concurrent_envs=4,  # Allow 4 concurrent sessions
-)
-```
-
-Then multiple clients can connect simultaneously:
-
-```python
-from my_env import MyAction, MyEnv
-from concurrent.futures import ThreadPoolExecutor
-
-def run_episode(client_id: int):
-    with MyEnv(base_url="http://localhost:8000") as env:
-        result = env.reset()
-        for i in range(10):
-            result = env.step(MyAction(message=f"Client {client_id}, step {i}"))
-        return client_id, result.observation.message_length
-
-# Run 4 episodes concurrently
-with ThreadPoolExecutor(max_workers=4) as executor:
-    results = list(executor.map(run_episode, range(4)))
-```
-
-## Development & Testing
-
-### Direct Environment Testing
-
-Test the environment logic directly without starting the HTTP server:
-
-```bash
-# From the server directory
-python3 server/my_env_environment.py
-```
-
-This verifies that:
-- Environment resets correctly
-- Step executes actions properly
-- State tracking works
-- Rewards are calculated correctly
-
-### Running Locally
-
-Run the server locally for development:
-
-```bash
-uvicorn server.app:app --reload
-```
-
-## Project Structure
-
-```
-my_env/
-├── .dockerignore         # Docker build exclusions
-├── __init__.py            # Module exports
-├── README.md              # This file
-├── openenv.yaml           # OpenEnv manifest
-├── pyproject.toml         # Project metadata and dependencies
-├── uv.lock                # Locked dependencies (generated)
-├── client.py              # MyEnv client
-├── models.py              # Action and Observation models
-└── server/
-    ├── __init__.py        # Server module exports
-    ├── my_env_environment.py  # Core environment logic
-    ├── app.py             # FastAPI application (HTTP + WebSocket endpoints)
-    └── Dockerfile         # Container image definition
+python inference.py
 ```
