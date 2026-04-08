@@ -376,6 +376,12 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
             )
             return ComplaintScenario(
                 complaint_id=complaint_id or "custom-complaint",
+                task_name="Custom Complaint Resolution",
+                task_description=(
+                    "Resolve a custom complaint with empathy, specificity, and a "
+                    "clear next step."
+                ),
+                difficulty="medium",
                 category=category,
                 customer_name=customer_name or "Customer",
                 complaint_text=complaint_text.strip(),
@@ -393,6 +399,8 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
                     "That does not solve my complaint.",
                     "I still need proper support for this issue.",
                 ),
+                max_steps=6,
+                success_threshold=0.72,
             )
 
         if complaint_id:

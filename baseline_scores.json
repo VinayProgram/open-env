@@ -11,18 +11,18 @@
       "task_id": "late-delivery",
       "grader": "grader_score",
       "result": 1,
-      "score": 0.4201,
+      "score": 0.9455,
       "success": true,
       "steps": 6,
-      "resolution_status": "escalated",
-      "average_reward": 0.3867,
+      "resolution_status": "resolved",
+      "average_reward": 0.5883,
       "rewards": [
-        0.77,
-        -0.1,
-        0.5,
-        0.5,
+        1.0,
         0.15,
-        0.5
+        0.86,
+        0.15,
+        0.86,
+        0.51
       ]
     },
     {
@@ -33,13 +33,13 @@
       "success": true,
       "steps": 6,
       "resolution_status": "escalated",
-      "average_reward": 0.6267,
+      "average_reward": 0.625,
       "rewards": [
         0.86,
         0.86,
         0.51,
-        0.51,
-        0.51,
+        0.15,
+        0.86,
         0.51
       ]
     },
@@ -47,21 +47,21 @@
       "task_id": "billing-error",
       "grader": "grader_score",
       "result": 1,
-      "score": 0.9145,
+      "score": 0.69,
       "success": true,
       "steps": 6,
-      "resolution_status": "resolved",
-      "average_reward": 0.8333,
+      "resolution_status": "in_progress",
+      "average_reward": 0.63,
       "rewards": [
         1.0,
-        0.8,
-        0.8,
-        0.8,
-        0.8,
-        0.8
+        0.86,
+        0.51,
+        0.51,
+        1.0,
+        -0.1
       ]
     }
   ],
-  "average_score": 0.5712,
+  "average_score": 0.6715,
   "task_count": 3
 }
