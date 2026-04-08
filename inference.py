@@ -382,3 +382,8 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+if False:
+    # For testing without an actual environment, you can run this file directly.
+    # It will use the heuristic baseline and print out the simulated results.
+    main()
