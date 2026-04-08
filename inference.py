@@ -38,6 +38,7 @@ MAX_STEPS = int(os.getenv("MAX_STEPS", "6"))
 TEMPERATURE = float(os.getenv("TEMPERATURE", "0.3"))
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "1000"))
 SUCCESS_SCORE_THRESHOLD = float(os.getenv("SUCCESS_SCORE_THRESHOLD", "0.6"))
+STOP_ON_DONE = os.getenv("STOP_ON_DONE", "").strip().lower() in {"1", "true", "yes", "on"}
 
 SYSTEM_PROMPT = textwrap.dedent(
     """
@@ -149,6 +150,7 @@ async def main() -> None:
     rewards: list[float] = []
     steps_taken = 0
     success = False
+    reached_resolved_state = False
     log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
 
     try:
@@ -156,7 +158,7 @@ async def main() -> None:
         last_reward = 0.0
 
         for step in range(1, MAX_STEPS + 1):
-            if result.done:
+            if STOP_ON_DONE and result.done:
                 break
 
             observation_text = result.observation.model_dump()
@@ -167,7 +169,10 @@ async def main() -> None:
             rewards.append(reward)
             steps_taken = step
             last_reward = reward
-
+            reached_resolved_state = (
+                reached_resolved_state
+                or result.observation.resolution_status == "resolved"
+            )
             log_step(
                 step=step,
                 action=message,
@@ -176,12 +181,16 @@ async def main() -> None:
                 error=None,
             )
 
-            if result.done:
+            if STOP_ON_DONE and result.done:
                 break
 
         average_reward = sum(rewards) / len(rewards) if rewards else 0.0
         resolution_status = result.observation.resolution_status
-        success = resolution_status == "resolved" or average_reward >= SUCCESS_SCORE_THRESHOLD
+        success = (
+            reached_resolved_state
+            or resolution_status == "resolved"
+            or average_reward >= SUCCESS_SCORE_THRESHOLD
+        )
     finally:
         try:
             await env.close()
