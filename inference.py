@@ -9,10 +9,10 @@ import sys
 import textwrap
 from pathlib import Path
 from typing import Any, Optional
-from unittest import result
 
 from dotenv import load_dotenv
 from openai import OpenAI
+from tasks import TASKS, TASK_INDEX
 
 load_dotenv()
 if __package__:
@@ -40,13 +40,13 @@ TEMPERATURE = float(os.getenv("TEMPERATURE", "0.3"))
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "1000"))
 SUCCESS_SCORE_THRESHOLD = float(os.getenv("SUCCESS_SCORE_THRESHOLD", "0.6"))
 STOP_ON_DONE = os.getenv("STOP_ON_DONE", "").strip().lower() in {"1", "true", "yes", "on"}
-DEFAULT_TASK_IDS = (
-    "late-delivery",
-    "damaged-item",
-    "billing-error",
-    "service-outage",
-    "wrong-item",
-)
+EXACT_TASK_SET = os.getenv("MY_ENV_EXACT_TASK_SET", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+DEFAULT_TASK_IDS = tuple(task.task_id for task in TASKS)
 SYSTEM_PROMPT = textwrap.dedent(
     """
     You are a customer support agent working a complaint-resolution chat.
@@ -84,6 +84,7 @@ def log_end(success: bool, steps: int, score: float, rewards: list[float]) -> No
 
 def log_task_result(
     task_id: str,
+    grader: str,
     score: float,
     result: int,
     success: bool,
@@ -92,7 +93,7 @@ def log_task_result(
 ) -> None:
     print(
         (
-            f"[TASK] task_id={task_id} result={result} score={score:.4f} "
+            f"[TASK] task_id={task_id} grader={grader} result={result} score={score:.4f} "
             f"success={str(success).lower()} steps={steps} "
             f"resolution_status={resolution_status}"
         ),
@@ -101,23 +102,30 @@ def log_task_result(
 
 
 def parse_task_ids() -> list[str]:
+    requested: list[str]
     raw_multi = (
         os.getenv("MY_ENV_TASK_IDS")
         or os.getenv("MY_ENV_COMPLAINT_IDS")
         or ""
     ).strip()
     if raw_multi:
-        return [part.strip() for part in raw_multi.split(",") if part.strip()]
+        requested = [part.strip() for part in raw_multi.split(",") if part.strip()]
+    else:
+        single_task = (
+            os.getenv("MY_ENV_TASK_ID")
+            or os.getenv("MY_ENV_COMPLAINT_ID")
+            or ""
+        ).strip()
+        if single_task:
+            requested = [single_task]
+        else:
+            requested = list(DEFAULT_TASK_IDS)
 
-    single_task = (
-        os.getenv("MY_ENV_TASK_ID")
-        or os.getenv("MY_ENV_COMPLAINT_ID")
-        or ""
-    ).strip()
-    if single_task:
-        return [single_task]
+    if EXACT_TASK_SET:
+        return list(dict.fromkeys(requested))
 
-    return list(DEFAULT_TASK_IDS)
+    expanded = [*requested, *DEFAULT_TASK_IDS]
+    return list(dict.fromkeys(expanded))
 
 
 def build_user_prompt(last_reward: float, observation_text: dict[str, object]) -> str:
@@ -291,6 +299,7 @@ async def run_task(
     log_end(success=success, steps=steps_taken, score=grader_score, rewards=rewards)
     log_task_result(
         task_id=task_id,
+        grader=TASK_INDEX[task_id].grader,
         score=grader_score,
         result=result_int,
         success=success,
@@ -299,7 +308,9 @@ async def run_task(
     )
     return {
         "task_id": task_id,
-        "grader": "grader_score",
+        "grader": TASK_INDEX[task_id].grader,
+        "grader_field": TASK_INDEX[task_id].grader_field,
+        "grader_type": TASK_INDEX[task_id].grader_type,
         "result": result_int,
         "score": grader_score,
         "success": success,
@@ -340,7 +351,20 @@ async def main() -> None:
     )
     summary = {
         "valid": all(0.0 < float(result["score"]) < 1.0 for result in results),
-        "tasks_with_graders": len(results),
+        "tasks_with_graders": sum(1 for result in results if result.get("grader")),
+        "grader_count": len({str(result["grader"]) for result in results if result.get("grader")}),
+        "graded_task_ids": [
+            str(result["task_id"]) for result in results if result.get("grader")
+        ],
+        "graders": [
+            {
+                "task_id": task.task_id,
+                "grader_id": task.grader,
+                "field": task.grader_field,
+                "grader_type": task.grader_type,
+            }
+            for task in TASKS
+        ],
         "results_binary": [int(result["result"]) for result in results],
         "results": results,
         "average_score": round(average_score, 4),

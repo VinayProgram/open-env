@@ -16,7 +16,8 @@ tags:
 # Complaint Resolution Benchmark
 
 This environment is a small customer-support benchmark with five explicit tasks
-and a deterministic `grader_score` for submission validation.
+and five task-specific graders that all write a deterministic `grader_score`
+for submission validation.
 
 The agent receives a complaint, sends support replies, and the environment
 tracks:
@@ -29,11 +30,11 @@ tracks:
 
 | Task ID | Name | Difficulty | Max Steps | Grader |
 |---|---|---|---:|---|
-| `late-delivery` | Late Delivery Recovery | easy | 5 | `grader_score` |
-| `damaged-item` | Damaged Item Refund Or Replacement | medium | 6 | `grader_score` |
-| `billing-error` | Duplicate Charge Resolution | hard | 7 | `grader_score` |
-| `service-outage` | Service Outage Escalation | medium | 6 | `grader_score` |
-| `wrong-item` | Wrong Item Exchange | easy | 5 | `grader_score` |
+| `late-delivery` | Late Delivery Recovery | easy | 5 | `grade_late_delivery` -> `grader_score` |
+| `damaged-item` | Damaged Item Refund Or Replacement | medium | 6 | `grade_damaged_item` -> `grader_score` |
+| `billing-error` | Duplicate Charge Resolution | hard | 7 | `grade_billing_error` -> `grader_score` |
+| `service-outage` | Service Outage Escalation | medium | 6 | `grade_service_outage` -> `grader_score` |
+| `wrong-item` | Wrong Item Exchange | easy | 5 | `grade_wrong_item` -> `grader_score` |
 
 Every task uses the same output contract: when the episode advances, the
 observation includes `grader_score`, and terminal scores are clamped to remain
@@ -58,8 +59,10 @@ The repo now also includes explicit submission-facing metadata:
 
 ## Baseline Runner
 
-`inference.py` now runs all five tasks by default and writes per-task scores to
-`baseline_scores.json`.
+`inference.py` now guarantees full benchmark coverage by default and writes
+per-task scores plus grader metadata to `baseline_scores.json`. If a single task
+ID is injected through the environment, the runner still appends the remaining
+benchmark tasks unless `MY_ENV_EXACT_TASK_SET=true` is set.
 
 Environment variables:
 

@@ -26,6 +26,8 @@ try:
 except ImportError:
     from models import MyAction, MyObservation, MyState
 
+from tasks import TASK_INDEX
+
 
 @dataclass(frozen=True)
 class ComplaintScenario:
@@ -244,22 +246,30 @@ TASK_SCORE_EPSILON = 0.05
 
 def get_task_catalog() -> list[dict[str, object]]:
     """Return the public benchmark task list for submission validation."""
-    return [
-        {
-            "id": scenario.complaint_id,
-            "name": scenario.task_name,
-            "difficulty": scenario.difficulty,
-            "description": scenario.task_description,
-            "max_steps": scenario.max_steps,
-            "success_threshold": scenario.success_threshold,
-            "grader": {
-                "type": "deterministic",
-                "field": "grader_score",
-                "score_range": {"min_exclusive": 0.0, "max_exclusive": 1.0},
-            },
-        }
-        for scenario in SCENARIOS
-    ]
+    catalog: list[dict[str, object]] = []
+    for scenario in SCENARIOS:
+        task = TASK_INDEX[scenario.complaint_id]
+        catalog.append(
+            {
+                "id": scenario.complaint_id,
+                "task_id": scenario.complaint_id,
+                "name": scenario.task_name,
+                "difficulty": scenario.difficulty,
+                "description": scenario.task_description,
+                "max_steps": scenario.max_steps,
+                "success_threshold": scenario.success_threshold,
+                "grader": task.grader,
+                "grader_field": task.grader_field,
+                "grader_type": task.grader_type,
+                "has_grader": True,
+                "grader_metadata": {
+                    "type": task.grader_type,
+                    "field": task.grader_field,
+                    "score_range": {"min_exclusive": 0.0, "max_exclusive": 1.0},
+                },
+            }
+        )
+    return catalog
 
 
 class MyEnvironment(Environment[MyAction, MyObservation, MyState]):

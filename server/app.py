@@ -157,8 +157,13 @@ api_app.include_router(customer_chat_router)
 async def list_tasks() -> dict[str, object]:
     """Expose the benchmark task catalog for submission validators."""
     tasks = get_task_catalog()
+    graders = sorted({str(task["grader"]) for task in tasks if task.get("grader")})
     return {
         "task_count": len(tasks),
+        "tasks_with_graders": sum(1 for task in tasks if task.get("grader")),
+        "grader_count": len(graders),
+        "graded_task_ids": [task["task_id"] for task in tasks if task.get("grader")],
+        "graders": graders,
         "tasks": tasks,
     }
 
@@ -167,12 +172,16 @@ async def list_tasks() -> dict[str, object]:
 async def validate_submission_shape() -> dict[str, object]:
     """Report the submission shape expected by hackathon validators."""
     tasks = get_task_catalog()
+    graders = sorted({str(task["grader"]) for task in tasks if task.get("grader")})
     return {
         "valid": len(tasks) >= 3,
         "env_name": "my_env",
         "version": "1.0.0",
         "task_count": len(tasks),
-        "tasks_with_graders": len(tasks),
+        "tasks_with_graders": sum(1 for task in tasks if task.get("grader")),
+        "grader_count": len(graders),
+        "graded_task_ids": [task["task_id"] for task in tasks if task.get("grader")],
+        "graders": graders,
         "grader_field": "grader_score",
         "score_range": {"min_exclusive": 0.0, "max_exclusive": 1.0},
         "tasks": tasks,

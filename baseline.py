@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from graders import grade_task_score
+from graders import grade_task_score, list_graders
 from tasks import TASKS
 
 
@@ -38,14 +38,20 @@ def run_baseline() -> dict[str, object]:
             {
                 "task_id": task.task_id,
                 "grader": task.grader,
+                "grader_field": task.grader_field,
+                "grader_type": task.grader_type,
                 "result": result,
                 "score": score,
             }
         )
 
+    graders = list_graders()
     return {
         "task_count": len(tasks),
-        "tasks_with_graders": len(tasks),
+        "tasks_with_graders": sum(1 for task in tasks if task["grader"]),
+        "grader_count": len(graders),
+        "graded_task_ids": [task["task_id"] for task in tasks if task["grader"]],
+        "graders": graders,
         "tasks": tasks,
     }
 

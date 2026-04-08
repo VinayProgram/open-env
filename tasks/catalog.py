@@ -15,7 +15,9 @@ class TaskSpec:
     description: str
     max_steps: int
     success_threshold: float
-    grader: str = "grader_score"
+    grader: str
+    grader_field: str = "grader_score"
+    grader_type: str = "deterministic"
 
 
 TASKS: tuple[TaskSpec, ...] = (
@@ -29,6 +31,7 @@ TASKS: tuple[TaskSpec, ...] = (
         ),
         max_steps=5,
         success_threshold=0.72,
+        grader="grade_late_delivery",
     ),
     TaskSpec(
         task_id="damaged-item",
@@ -40,6 +43,7 @@ TASKS: tuple[TaskSpec, ...] = (
         ),
         max_steps=6,
         success_threshold=0.75,
+        grader="grade_damaged_item",
     ),
     TaskSpec(
         task_id="billing-error",
@@ -51,6 +55,7 @@ TASKS: tuple[TaskSpec, ...] = (
         ),
         max_steps=7,
         success_threshold=0.73,
+        grader="grade_billing_error",
     ),
     TaskSpec(
         task_id="service-outage",
@@ -62,6 +67,7 @@ TASKS: tuple[TaskSpec, ...] = (
         ),
         max_steps=6,
         success_threshold=0.74,
+        grader="grade_service_outage",
     ),
     TaskSpec(
         task_id="wrong-item",
@@ -73,6 +79,7 @@ TASKS: tuple[TaskSpec, ...] = (
         ),
         max_steps=5,
         success_threshold=0.71,
+        grader="grade_wrong_item",
     ),
 )
 

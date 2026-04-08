@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from graders import grade_task_score, has_grader
+from graders import grade_task_score, has_grader, list_graders
 from tasks import TASKS
 
 
@@ -41,6 +41,8 @@ def build_report() -> dict[str, object]:
                 "name": task.name,
                 "difficulty": task.difficulty,
                 "grader": task.grader,
+                "grader_field": task.grader_field,
+                "grader_type": task.grader_type,
                 "has_grader": has_grader(task.task_id),
                 "result": result_int,
                 "score": normalized_score,
@@ -49,11 +51,16 @@ def build_report() -> dict[str, object]:
         )
 
     tasks_with_graders = sum(1 for task in task_reports if task["has_grader"])
+    graded_task_ids = [str(task["task_id"]) for task in task_reports if task["has_grader"]]
+    graders = list_graders()
     out_of_range = [task["task_id"] for task in task_reports if not task["score_in_open_interval"]]
     return {
         "valid": tasks_with_graders >= 3 and not out_of_range,
         "tasks_with_graders": tasks_with_graders,
         "task_count": len(task_reports),
+        "grader_count": len(graders),
+        "graded_task_ids": graded_task_ids,
+        "graders": graders,
         "out_of_range_scores": out_of_range,
         "tasks": task_reports,
     }
