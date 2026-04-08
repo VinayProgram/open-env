@@ -34,6 +34,7 @@ def build_report() -> dict[str, object]:
             score=float(raw_score) if raw_score is not None else None,
             success=bool(success) if success is not None else None,
         )
+        result_int = 1 if bool(success) else 0
         task_reports.append(
             {
                 "task_id": task.task_id,
@@ -41,6 +42,7 @@ def build_report() -> dict[str, object]:
                 "difficulty": task.difficulty,
                 "grader": task.grader,
                 "has_grader": has_grader(task.task_id),
+                "result": result_int,
                 "score": normalized_score,
                 "score_in_open_interval": 0.0 < normalized_score < 1.0,
             }

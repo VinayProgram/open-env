@@ -1,23 +1,34 @@
 {
+  "valid": true,
+  "tasks_with_graders": 3,
+  "results_binary": [
+    1,
+    1,
+    1
+  ],
   "results": [
     {
       "task_id": "late-delivery",
-      "score": 0.8155,
+      "grader": "grader_score",
+      "result": 1,
+      "score": 0.4201,
       "success": true,
       "steps": 6,
-      "resolution_status": "resolved",
-      "average_reward": 0.6217,
+      "resolution_status": "escalated",
+      "average_reward": 0.3867,
       "rewards": [
-        1.0,
+        0.77,
+        -0.1,
+        0.5,
         0.5,
         0.15,
-        0.61,
-        0.61,
-        0.86
+        0.5
       ]
     },
     {
       "task_id": "damaged-item",
+      "grader": "grader_score",
+      "result": 1,
       "score": 0.379,
       "success": true,
       "steps": 6,
@@ -34,21 +45,23 @@
     },
     {
       "task_id": "billing-error",
-      "score": 0.684,
+      "grader": "grader_score",
+      "result": 1,
+      "score": 0.9145,
       "success": true,
       "steps": 6,
-      "resolution_status": "in_progress",
-      "average_reward": 0.45,
+      "resolution_status": "resolved",
+      "average_reward": 0.8333,
       "rewards": [
         1.0,
-        -0.1,
-        1.0,
-        -0.1,
-        1.0,
-        -0.1
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.8
       ]
     }
   ],
-  "average_score": 0.6262,
+  "average_score": 0.5712,
   "task_count": 3
 }

@@ -79,13 +79,14 @@ def log_end(success: bool, steps: int, rewards: list[float]) -> None:
 def log_task_result(
     task_id: str,
     score: float,
+    result: int,
     success: bool,
     steps: int,
     resolution_status: str,
 ) -> None:
     print(
         (
-            f"[TASK] task_id={task_id} score={score:.4f} "
+            f"[TASK] task_id={task_id} result={result} score={score:.4f} "
             f"success={str(success).lower()} steps={steps} "
             f"resolution_status={resolution_status}"
         ),
@@ -268,10 +269,12 @@ async def run_task(
         or resolution_status == "resolved"
         or grader_score >= success_threshold
     )
+    result_int = 1 if success else 0
     log_end(success=success, steps=steps_taken, rewards=rewards)
     log_task_result(
         task_id=task_id,
         score=grader_score,
+        result=result_int,
         success=success,
         steps=steps_taken,
         resolution_status=resolution_status,
@@ -279,6 +282,7 @@ async def run_task(
     return {
         "task_id": task_id,
         "grader": "grader_score",
+        "result": result_int,
         "score": grader_score,
         "success": success,
         "steps": steps_taken,
@@ -319,6 +323,7 @@ async def main() -> None:
     summary = {
         "valid": all(0.0 < float(result["score"]) < 1.0 for result in results),
         "tasks_with_graders": len(results),
+        "results_binary": [int(result["result"]) for result in results],
         "results": results,
         "average_score": round(average_score, 4),
         "task_count": len(results),
