@@ -15,7 +15,7 @@ tags:
 
 # Complaint Resolution Benchmark
 
-This environment is a small customer-support benchmark with three explicit tasks
+This environment is a small customer-support benchmark with five explicit tasks
 and a deterministic `grader_score` for submission validation.
 
 The agent receives a complaint, sends support replies, and the environment
@@ -32,6 +32,8 @@ tracks:
 | `late-delivery` | Late Delivery Recovery | easy | 5 | `grader_score` |
 | `damaged-item` | Damaged Item Refund Or Replacement | medium | 6 | `grader_score` |
 | `billing-error` | Duplicate Charge Resolution | hard | 7 | `grader_score` |
+| `service-outage` | Service Outage Escalation | medium | 6 | `grader_score` |
+| `wrong-item` | Wrong Item Exchange | easy | 5 | `grader_score` |
 
 Every task uses the same output contract: when the episode advances, the
 observation includes `grader_score`, and terminal scores are clamped to remain
@@ -49,14 +51,14 @@ strictly greater than `0.0` and strictly less than `1.0`.
 
 The repo now also includes explicit submission-facing metadata:
 
-- `tasks/` contains the three benchmark task definitions
+- `tasks/` contains the five benchmark task definitions
 - `graders/` contains deterministic score normalization helpers
 - `validate_submission.py` prints a machine-readable report with task/grader coverage
 - `baseline_scores.json` stores the latest multi-task baseline scores
 
 ## Baseline Runner
 
-`inference.py` now runs all three tasks by default and writes per-task scores to
+`inference.py` now runs all five tasks by default and writes per-task scores to
 `baseline_scores.json`.
 
 Environment variables:

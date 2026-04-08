@@ -52,6 +52,28 @@ TASKS: tuple[TaskSpec, ...] = (
         max_steps=7,
         success_threshold=0.73,
     ),
+    TaskSpec(
+        task_id="service-outage",
+        name="Service Outage Escalation",
+        difficulty="medium",
+        description=(
+            "Acknowledge a service outage, provide a restoration path, and offer "
+            "a callback, technician visit, or service credit."
+        ),
+        max_steps=6,
+        success_threshold=0.74,
+    ),
+    TaskSpec(
+        task_id="wrong-item",
+        name="Wrong Item Exchange",
+        difficulty="easy",
+        description=(
+            "Resolve a wrong-item shipment with a correct exchange and a prepaid "
+            "return process."
+        ),
+        max_steps=5,
+        success_threshold=0.71,
+    ),
 )
 
 TASK_INDEX = {task.task_id: task for task in TASKS}

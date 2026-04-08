@@ -39,8 +39,12 @@ dev = [
 # Server entry point - enables running via: uv run --project . server
 # or: python -m my_env.server.app
 server = "my_env.server.app:main"
+baseline = "baseline:main"
+grader = "grader:main"
+validate-submission = "validate_submission:main"
 
 [tool.setuptools]
 include-package-data = true
-packages = ["my_env", "my_env.server"]
-package-dir = { "my_env" = ".", "my_env.server" = "server" }
+packages = ["my_env", "my_env.server", "tasks", "graders"]
+py-modules = ["baseline", "grader", "validate_submission"]
+package-dir = { "my_env" = ".", "my_env.server" = "server", "tasks" = "tasks", "graders" = "graders" }

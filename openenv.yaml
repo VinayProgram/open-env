@@ -2,8 +2,8 @@ spec_version: 1
 name: my_env
 version: "1.0.0"
 description: >
-  Complaint-resolution benchmark with three graded customer-support tasks.
-  Agents must resolve delivery, product, and billing complaints while the
+  Complaint-resolution benchmark with five graded customer-support tasks.
+  Agents must resolve delivery, product, billing, and service complaints while the
   environment emits shaped rewards and a deterministic grader_score strictly
   inside the interval (0, 1).
 author: hackathon-submission
@@ -62,6 +62,24 @@ tasks:
     max_steps: 7
     success_threshold: 0.73
     grader: grader_score
+  - id: service-outage
+    name: Service Outage Escalation
+    difficulty: medium
+    description: >
+      Handle a service outage complaint with a restoration path, callback or
+      technician escalation, and appropriate compensation.
+    max_steps: 6
+    success_threshold: 0.74
+    grader: grader_score
+  - id: wrong-item
+    name: Wrong Item Exchange
+    difficulty: easy
+    description: >
+      Resolve a wrong-item shipment with a correct exchange and a prepaid
+      return process.
+    max_steps: 5
+    success_threshold: 0.71
+    grader: grader_score
 
 endpoints:
   reset: POST /reset
@@ -70,6 +88,8 @@ endpoints:
   metadata: GET /metadata
   tasks: GET /tasks
   validate: GET /validate
+  grader: GET /grader
+  baseline: GET /baseline
 
 tags:
   - openenv

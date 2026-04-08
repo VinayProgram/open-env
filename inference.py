@@ -39,7 +39,13 @@ TEMPERATURE = float(os.getenv("TEMPERATURE", "0.3"))
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "1000"))
 SUCCESS_SCORE_THRESHOLD = float(os.getenv("SUCCESS_SCORE_THRESHOLD", "0.6"))
 STOP_ON_DONE = os.getenv("STOP_ON_DONE", "").strip().lower() in {"1", "true", "yes", "on"}
-DEFAULT_TASK_IDS = ("late-delivery", "damaged-item", "billing-error")
+DEFAULT_TASK_IDS = (
+    "late-delivery",
+    "damaged-item",
+    "billing-error",
+    "service-outage",
+    "wrong-item",
+)
 SYSTEM_PROMPT = textwrap.dedent(
     """
     You are a customer support agent working a complaint-resolution chat.
@@ -95,13 +101,13 @@ def log_task_result(
 
 
 def parse_task_ids() -> list[str]:
-    raw_multi = [
-        "late-delivery",
-        "damaged-item",
-        "billing-error"
-    ]
+    raw_multi = (
+        os.getenv("MY_ENV_TASK_IDS")
+        or os.getenv("MY_ENV_COMPLAINT_IDS")
+        or ""
+    ).strip()
     if raw_multi:
-        return [part.strip() for part in raw_multi if part.strip()]
+        return [part.strip() for part in raw_multi.split(",") if part.strip()]
 
     single_task = (
         os.getenv("MY_ENV_TASK_ID")
@@ -193,6 +199,12 @@ def build_heuristic_reply(observation_text: dict[str, object]) -> str:
             "I am sorry about the duplicate charge. I am escalating this to our billing team, "
             "reversing the extra subscription charge, and I will confirm the refund timeframe "
             "and follow-up so this does not happen again."
+        )
+    if category == "service":
+        return (
+            "I am sorry for the service outage and I understand how disruptive this is. "
+            "I am escalating the issue now, arranging a technician callback with a restoration "
+            "timeframe, and I will also review an appropriate service credit."
         )
 
     if "refund" in latest_customer_message or "replacement" in latest_customer_message:

@@ -142,6 +142,72 @@ SCENARIOS: tuple[ComplaintScenario, ...] = (
         max_steps=7,
         success_threshold=0.73,
     ),
+    ComplaintScenario(
+        complaint_id="service-outage",
+        task_name="Service Outage Escalation",
+        task_description=(
+            "Handle a service outage complaint by acknowledging the disruption, "
+            "sharing a restoration path, and offering escalation or compensation."
+        ),
+        difficulty="medium",
+        category="service",
+        customer_name="Neha",
+        complaint_text=(
+            "My home internet has been down since yesterday evening and I work "
+            "remotely. I need service restored quickly and want to know what "
+            "callback or service credit you can offer."
+        ),
+        required_keywords=("service", "outage", "restore", "callback"),
+        resolution_keywords=("credit", "callback", "technician", "escalate"),
+        positive_feedback=(
+            "A same-day callback and service credit works for me.",
+            "Thanks, that outage plan helps.",
+            "Okay, please send the technician and apply the credit.",
+        ),
+        neutral_feedback=(
+            "I still need a restoration timeframe.",
+            "Please confirm when the technician or callback will happen.",
+        ),
+        negative_feedback=(
+            "You still have not told me when service will be restored.",
+            "This outage is affecting my work and I need a real solution.",
+        ),
+        max_steps=6,
+        success_threshold=0.74,
+    ),
+    ComplaintScenario(
+        complaint_id="wrong-item",
+        task_name="Wrong Item Exchange",
+        task_description=(
+            "Resolve a wrong-item shipment complaint with a correct exchange and "
+            "a no-cost return process."
+        ),
+        difficulty="easy",
+        category="product",
+        customer_name="Kabir",
+        complaint_text=(
+            "I ordered a black medium jacket, but I received a blue small one "
+            "instead. I need the correct item sent quickly and I should not be "
+            "charged for returning your mistake."
+        ),
+        required_keywords=("wrong", "exchange", "return", "correct"),
+        resolution_keywords=("replacement", "exchange", "pickup", "return label"),
+        positive_feedback=(
+            "An exchange with a prepaid return label works for me.",
+            "Thank you, that fixes the wrong item issue.",
+            "Okay, please send the correct jacket and the return label.",
+        ),
+        neutral_feedback=(
+            "Please confirm when the correct item will ship.",
+            "I need the exchange steps explained clearly.",
+        ),
+        negative_feedback=(
+            "You still have not explained how I return the wrong item.",
+            "I need the correct item, not another delay.",
+        ),
+        max_steps=5,
+        success_threshold=0.71,
+    ),
 )
 
 SCENARIO_INDEX = {scenario.complaint_id: scenario for scenario in SCENARIOS}
@@ -280,8 +346,8 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
         return EnvironmentMetadata(
             name="Complaint Resolution Benchmark",
             description=(
-                "A three-task customer-support benchmark where an agent resolves "
-                "delivery, product, and billing complaints and receives a "
+                "A five-task customer-support benchmark where an agent resolves "
+                "delivery, product, billing, and service complaints and receives a "
                 "deterministic grader_score in the open interval (0, 1)."
             ),
             version="1.0.0",
