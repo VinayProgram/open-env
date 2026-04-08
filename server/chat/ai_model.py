@@ -13,7 +13,8 @@ from pydantic import BaseModel, Field
 try:
     from ... import MyAction, MyEnv
 except ImportError:
-    from my_env import MyAction, MyEnv
+    from client import MyEnv
+    from models import MyAction
 
 from ..sql.db import get_chat_by_key
 
