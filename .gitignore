@@ -1,2 +1,5 @@
 .env
 my_env/.env
+.env
+/.env
+my_env/.env
