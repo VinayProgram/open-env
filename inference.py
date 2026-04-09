@@ -32,6 +32,7 @@ Rules:
 import asyncio
 import os
 import textwrap
+import inspect
 from typing import List, Optional
 from urllib.parse import urlparse, urlunparse
 
@@ -98,10 +99,16 @@ async def _resolve_env() -> MyEnv:
         return MyEnv(base_url=_normalize_env_base_url(ENV_BASE_URL or ""))
     if mode == "image":
         # Requested behavior: if mode == "image": return await MyEnv.from_docker_image(value)
-        return await asyncio.to_thread(MyEnv.from_docker_image, (ENV_BASE_URL or "").strip())
+        maybe_env = MyEnv.from_docker_image((ENV_BASE_URL or "").strip())
+        return await maybe_env if inspect.isawaitable(maybe_env) else maybe_env
     if LOCAL_IMAGE_NAME:
-        return await asyncio.to_thread(MyEnv.from_docker_image, LOCAL_IMAGE_NAME.strip())
+        maybe_env = MyEnv.from_docker_image(LOCAL_IMAGE_NAME.strip())
+        return await maybe_env if inspect.isawaitable(maybe_env) else maybe_env
     return MyEnv(base_url=_normalize_env_base_url("http://localhost:8000"))
+
+
+async def _maybe_await(value):
+    return await value if inspect.isawaitable(value) else value
 
 
 def _bool_str(value: bool) -> str:
@@ -183,7 +190,7 @@ async def run_task(task_id: str, client: OpenAI) -> None:
     env: MyEnv | None = None
     try:
         env = await _resolve_env()
-        await env.connect()
+        await _maybe_await(env.connect())
         result = await env.reset(task_id=task_id)
         for step in range(1, MAX_STEPS + 1):
             if result.done:
@@ -218,7 +225,7 @@ async def run_task(task_id: str, client: OpenAI) -> None:
     finally:
         try:
             if env is not None:
-                await env.close()
+                await _maybe_await(env.close())
         except Exception:
             pass
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
