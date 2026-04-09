@@ -466,6 +466,19 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def detect_precision_settings() -> tuple[bool, bool, bool]:
+    """Pick a CPU- or GPU-safe precision setup for TRL/Transformers."""
+    try:
+        import torch
+    except ModuleNotFoundError:
+        return True, False, False
+
+    if not torch.cuda.is_available():
+        return True, False, False
+
+    return False, bool(torch.cuda.is_bf16_supported()), not bool(torch.cuda.is_bf16_supported())
+
+
 def main() -> int:
     args = parse_args()
     task_ids = parse_task_ids(args.task_ids)
@@ -481,6 +494,14 @@ def main() -> int:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token or tokenizer.unk_token
     tokenizer.padding_side = "left"
+
+    use_cpu, bf16, fp16 = detect_precision_settings()
+    if use_cpu:
+        print("[WARN] CUDA is not available; training will run on CPU.", flush=True)
+    elif bf16:
+        print("[INFO] Using bf16 precision on GPU.", flush=True)
+    else:
+        print("[INFO] Using fp16 precision on GPU.", flush=True)
 
     peft_config = LoraConfig(
         r=8,
@@ -511,9 +532,16 @@ def main() -> int:
         "seed": args.seed,
         "gradient_checkpointing": True,
         "log_completions": True,
+        "use_cpu": use_cpu,
+        "bf16": bf16,
+        "fp16": fp16,
     }
 
-    if args.use_vllm:
+    effective_use_vllm = args.use_vllm and not use_cpu
+    if args.use_vllm and use_cpu:
+        print("[WARN] --use-vllm ignored because CUDA is not available.", flush=True)
+
+    if effective_use_vllm:
         grpo_kwargs["use_vllm"] = True
         grpo_kwargs["vllm_mode"] = args.vllm_mode
         if args.vllm_mode == "server":

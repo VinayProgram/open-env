@@ -15,6 +15,7 @@ from openai import OpenAI
 from tasks import TASKS, TASK_INDEX
 
 load_dotenv()
+
 if __package__:
     from . import MyAction, MyEnv
 else:
@@ -26,6 +27,7 @@ else:
 
 IMAGE_NAME = os.getenv("IMAGE_NAME")
 ENV_BASE_URL = os.getenv("ENV_BASE_URL")
+DEFAULT_ENV_BASE_URL = os.getenv("DEFAULT_ENV_BASE_URL", "http://127.0.0.1:8000")
 API_KEY = (
     os.getenv("HF_TOKEN")
     or os.getenv("API_KEY")
@@ -81,6 +83,7 @@ def log_end(success: bool, steps: int, score: float, rewards: list[float]) -> No
         f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}",
         flush=True,
     )
+
 
 def log_task_result(
     task_id: str,
@@ -152,34 +155,6 @@ def build_user_prompt(last_reward: float, observation_text: dict[str, object]) -
     ).strip()
 
 
-def get_model_message(
-    client: OpenAI | None,
-    last_reward: float,
-    observation_text: dict[str, object],
-) -> str:
-    user_prompt = build_user_prompt(last_reward, observation_text)
-    fallback = build_heuristic_reply(observation_text)
-    if client is None:
-        return fallback
-    try:
-        completion = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=TEMPERATURE,
-            max_tokens=MAX_TOKENS,
-            stream=False,
-        )
-        print(f"Raw model response: {completion}", flush=True)
-        text = (completion.choices[0].message.content or "").strip()
-        return text if text else fallback
-    except Exception as exc:
-        print(f"Model request failed: {type(exc).__name__}: {exc}", flush=True)
-        return fallback
-
-
 def build_heuristic_reply(observation_text: dict[str, object]) -> str:
     category = str(observation_text.get("complaint_category", "")).strip().lower()
     latest_customer_message = str(observation_text.get("latest_customer_message", "")).lower()
@@ -226,13 +201,87 @@ def build_heuristic_reply(observation_text: dict[str, object]) -> str:
     )
 
 
+def get_model_message(
+    client: OpenAI | None,
+    last_reward: float,
+    observation_text: dict[str, object],
+) -> str:
+    user_prompt = build_user_prompt(last_reward, observation_text)
+    fallback = build_heuristic_reply(observation_text)
+    if client is None:
+        return fallback
+
+    try:
+        completion = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+            stream=False,
+        )
+        text = (completion.choices[0].message.content or "").strip()
+        return text if text else fallback
+    except Exception as exc:
+        print(f"Model request failed: {type(exc).__name__}: {exc}", flush=True)
+        return fallback
+
+
+def _normalize_base_url(base_url: str) -> str:
+    base_url = base_url.strip()
+    if not base_url:
+        return "http://127.0.0.1:8000"
+    if "://" not in base_url:
+        return f"http://{base_url}"
+    return base_url
+
+
+def _looks_like_base_url(value: str) -> bool:
+    candidate = value.strip().lower()
+    if not candidate:
+        return False
+    if candidate.startswith(("http://", "https://", "ws://", "wss://")):
+        return True
+    if candidate.startswith(("localhost", "127.0.0.1", "0.0.0.0")):
+        return True
+    return "." in candidate and "/" not in candidate
+
+
 async def _connect_env() -> MyEnv:
+    attempts: list[tuple[str, str]] = []
+
     if ENV_BASE_URL:
-        env = await MyEnv.from_docker_image(ENV_BASE_URL)
-        return env
-    if IMAGE_NAME:
-        return await MyEnv.from_docker_image(IMAGE_NAME)
-    raise RuntimeError("Set either ENV_BASE_URL or IMAGE_NAME before running inference.")
+        if _looks_like_base_url(ENV_BASE_URL):
+            attempts.append(("base_url", ENV_BASE_URL))
+        else:
+            attempts.append(("image", ENV_BASE_URL))
+    if IMAGE_NAME and IMAGE_NAME != ENV_BASE_URL:
+        attempts.append(("image", IMAGE_NAME))
+    attempts.append(("base_url", DEFAULT_ENV_BASE_URL))
+
+    errors: list[str] = []
+    for mode, value in attempts:
+        try:
+            if mode == "image":
+                return await MyEnv.from_docker_image(value)
+            env = MyEnv(base_url=_normalize_base_url(value))
+            await env.connect()
+            return env
+        except Exception as exc:
+            errors.append(f"{mode}={value}: {type(exc).__name__}: {exc}")
+            print(
+                f"[WARN] Failed to connect using {mode}={value}: {type(exc).__name__}: {exc}",
+                flush=True,
+            )
+
+    raise RuntimeError(
+        "Unable to connect to the complaint environment. Tried:\n- "
+        + "\n- ".join(errors)
+        + "\nSet ENV_BASE_URL to a real http(s) URL, or set IMAGE_NAME to a valid Docker image, "
+        "or start the local server with `uvicorn server.app:app --host 0.0.0.0 --port 8000`."
+    )
 
 
 async def run_task(
@@ -242,7 +291,6 @@ async def run_task(
 ) -> dict[str, Any]:
     rewards: list[float] = []
     steps_taken = 0
-    success = False
     reached_resolved_state = False
     result = await env.reset(task_id=task_id)
     last_reward = 0.0
@@ -280,13 +328,12 @@ async def run_task(
         result.observation.grader_score
         if result.observation.grader_score is not None
         else result.observation.metadata.get("grader_score", average_reward)
-)
-
-# ✅ STRICT CLAMP (THIS FIXES YOUR FAILURE)
+    )
     if grader_score <= 0.0:
         grader_score = 0.01
     elif grader_score >= 1.0:
         grader_score = 0.99
+
     success_threshold = float(
         result.observation.metadata.get("success_threshold", SUCCESS_SCORE_THRESHOLD)
     )
@@ -331,18 +378,24 @@ async def main() -> None:
             flush=True,
         )
 
-    env = await _connect_env()
-    task_ids = parse_task_ids()
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME if client else "heuristic-baseline")
-    print(f"[CONFIG] task_ids={','.join(task_ids)} max_steps={MAX_STEPS}", flush=True)
-
+    env: MyEnv | None = None
     results: list[dict[str, Any]] = []
     try:
+        env = await _connect_env()
+        task_ids = parse_task_ids()
+        log_start(
+            task=TASK_NAME,
+            env=BENCHMARK,
+            model=MODEL_NAME if client else "heuristic-baseline",
+        )
+        print(f"[CONFIG] task_ids={','.join(task_ids)} max_steps={MAX_STEPS}", flush=True)
+
         for task_id in task_ids:
             print(f"\n=== Running task: {task_id} ===", flush=True)
             results.append(await run_task(env=env, client=client, task_id=task_id))
     finally:
-        await env.close()
+        if env is not None:
+            await env.close()
 
     average_score = (
         sum(float(result["score"]) for result in results) / len(results)
@@ -382,8 +435,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-if False:
-    # For testing without an actual environment, you can run this file directly.
-    # It will use the heuristic baseline and print out the simulated results.
-    main()

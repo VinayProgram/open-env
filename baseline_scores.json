@@ -55,17 +55,17 @@
       "grader_field": "grader_score",
       "grader_type": "deterministic",
       "result": 1,
-      "score": 0.4965,
+      "score": 0.44,
       "success": true,
       "steps": 6,
       "resolution_status": "escalated",
-      "average_reward": 0.45,
+      "average_reward": 0.5833,
       "rewards": [
-        1.0,
-        -0.1,
-        1.0,
-        -0.1,
-        1.0,
+        0.77,
+        0.25,
+        0.86,
+        0.86,
+        0.86,
         -0.1
       ]
     },
@@ -75,7 +75,47 @@
       "grader_field": "grader_score",
       "grader_type": "deterministic",
       "result": 1,
-      "score": 0.4965,
+      "score": 0.379,
+      "success": true,
+      "steps": 6,
+      "resolution_status": "escalated",
+      "average_reward": 0.5683,
+      "rewards": [
+        0.86,
+        0.51,
+        0.51,
+        0.51,
+        0.51,
+        0.51
+      ]
+    },
+    {
+      "task_id": "billing-error",
+      "grader": "grade_billing_error",
+      "grader_field": "grader_score",
+      "grader_type": "deterministic",
+      "result": 1,
+      "score": 0.95,
+      "success": true,
+      "steps": 6,
+      "resolution_status": "resolved",
+      "average_reward": 0.6333,
+      "rewards": [
+        1.0,
+        1.0,
+        -0.1,
+        1.0,
+        -0.1,
+        1.0
+      ]
+    },
+    {
+      "task_id": "service-outage",
+      "grader": "grade_service_outage",
+      "grader_field": "grader_score",
+      "grader_type": "deterministic",
+      "result": 1,
+      "score": 0.434,
       "success": true,
       "steps": 6,
       "resolution_status": "escalated",
@@ -90,66 +130,26 @@
       ]
     },
     {
-      "task_id": "billing-error",
-      "grader": "grade_billing_error",
-      "grader_field": "grader_score",
-      "grader_type": "deterministic",
-      "result": 1,
-      "score": 0.9145,
-      "success": true,
-      "steps": 6,
-      "resolution_status": "resolved",
-      "average_reward": 0.8667,
-      "rewards": [
-        1.0,
-        1.0,
-        0.8,
-        0.8,
-        0.8,
-        0.8
-      ]
-    },
-    {
-      "task_id": "service-outage",
-      "grader": "grade_service_outage",
-      "grader_field": "grader_score",
-      "grader_type": "deterministic",
-      "result": 1,
-      "score": 0.4575,
-      "success": true,
-      "steps": 6,
-      "resolution_status": "escalated",
-      "average_reward": 0.78,
-      "rewards": [
-        1.0,
-        1.0,
-        0.67,
-        0.67,
-        0.67,
-        0.67
-      ]
-    },
-    {
       "task_id": "wrong-item",
       "grader": "grade_wrong_item",
       "grader_field": "grader_score",
       "grader_type": "deterministic",
       "result": 1,
-      "score": 0.44,
+      "score": 0.912,
       "success": true,
       "steps": 6,
-      "resolution_status": "escalated",
-      "average_reward": 0.5533,
+      "resolution_status": "resolved",
+      "average_reward": 0.7667,
       "rewards": [
         0.86,
+        0.67,
+        0.67,
         0.8,
-        1.0,
-        -0.1,
-        0.86,
-        -0.1
+        0.8,
+        0.8
       ]
     }
   ],
-  "average_score": 0.561,
+  "average_score": 0.623,
   "task_count": 5
 }
