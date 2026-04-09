@@ -54,8 +54,6 @@ from fastapi.responses import FileResponse
 from .chat.chat_router import router as chat_router
 from .customer_service.customer_chat_router import router as customer_chat_router
 from .my_env_environment import MyEnvironment, get_task_catalog
-from baseline import run_baseline
-from grader import grade
 
 API_PREFIX = "/api"
 CLIENT_DIST_CANDIDATES = (
@@ -216,16 +214,7 @@ async def validate_submission_shape() -> dict[str, object]:
     }
 
 
-@api_app.get("/grader", tags=["Benchmark"])
-async def grader_report() -> dict[str, object]:
-    """Expose normalized grader output for hackathon validators."""
-    return grade()
 
-
-@api_app.get("/baseline", tags=["Benchmark"])
-async def baseline_report() -> dict[str, object]:
-    """Expose baseline task scores for hackathon validators."""
-    return run_baseline()
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 origins = [

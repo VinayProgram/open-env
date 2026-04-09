@@ -1,1 +1,6 @@
+client
+grader
+inference
+models
 my_env
+tasks

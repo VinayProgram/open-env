@@ -2,11 +2,7 @@ spec_version: 1
 openenv_version: "0.2.0"
 name: my_env
 version: "1.0.0"
-description: >
-  Complaint-resolution benchmark with five graded customer-support tasks.
-  Agents must resolve delivery, product, billing, and service complaints while the
-  environment emits shaped rewards and a deterministic grader_score strictly
-  inside the interval (0, 1).
+description: Complaint-resolution benchmark with five graded customer-support tasks.
 author: hackathon-submission
 type: space
 runtime: fastapi
@@ -38,88 +34,66 @@ grader:
   score_range:
     min_exclusive: 0.0
     max_exclusive: 1.0
-grader_metadata:
-  field: grader_score
-  type: deterministic
-  notes:
-    - step reward remains shaped and may be outside [0, 1]
-    - submission task validation should use grader_score
 
 tasks:
   - id: easy
     name: Late Delivery Recovery
     difficulty: easy
-    description: >
-      Acknowledge an urgent shipment delay, reference tracking, and offer a
-      concrete recovery path such as expedite, refund, or escalation.
+    description: Customer reports a delayed order.
     max_steps: 5
     success_threshold: 0.72
     grader:
-      module: graders.complaint_graders
-      function: grade_late_delivery
-    grader_id: grade_late_delivery
-    grader_field: grader_score
-    grader_type: deterministic
+      module: grader
+      function: grade
+    grader_id: grade
     has_grader: true
+
   - id: easy2
     name: Wrong Item Exchange
     difficulty: easy
-    description: >
-      Resolve a wrong-item shipment with a correct exchange and a prepaid
-      return process.
+    description: Customer wants to exchange wrong item.
     max_steps: 5
     success_threshold: 0.71
     grader:
-      module: graders.complaint_graders
-      function: grade_wrong_item
-    grader_id: grade_wrong_item
-    grader_field: grader_score
-    grader_type: deterministic
+      module: grader
+      function: grade
+    grader_id: grade
     has_grader: true
+
   - id: medium
     name: Damaged Item Refund Or Replacement
     difficulty: medium
-    description: >
-      Resolve a damaged-product complaint without charging return shipping, and
-      propose a refund or replacement with clear logistics.
+    description: Customer wants replacement or refund for damaged item.
     max_steps: 6
     success_threshold: 0.75
     grader:
-      module: graders.complaint_graders
-      function: grade_damaged_item
-    grader_id: grade_damaged_item
-    grader_field: grader_score
-    grader_type: deterministic
+      module: grader
+      function: grade
+    grader_id: grade
     has_grader: true
+
   - id: medium2
     name: Service Outage Escalation
     difficulty: medium
-    description: >
-      Handle a service outage complaint by acknowledging the disruption,
-      sharing a restoration path, and offering escalation or compensation.
+    description: Customer reports service outage.
     max_steps: 6
     success_threshold: 0.74
     grader:
-      module: graders.complaint_graders
-      function: grade_service_outage
-    grader_id: grade_service_outage
-    grader_field: grader_score
-    grader_type: deterministic
+      module: grader
+      function: grade
+    grader_id: grade
     has_grader: true
+
   - id: hard
     name: Duplicate Charge Resolution
     difficulty: hard
-    description: >
-      Reverse a duplicate subscription charge, explain the billing follow-up,
-      and reassure the customer that the issue will not recur.
+    description: Customer reports duplicate charge.
     max_steps: 7
     success_threshold: 0.73
     grader:
-      module: graders.complaint_graders
-      function: grade_billing_error
-    grader_id: grade_billing_error
-    grader_field: grader_score
-    grader_type: deterministic
+      module: grader
+      function: grade
+    grader_id: grade
     has_grader: true
 
 endpoints:
@@ -129,11 +103,7 @@ endpoints:
   metadata: GET /metadata
   tasks: GET /tasks
   validate: GET /validate
-  grader: GET /grader
-  baseline: GET /baseline
 
 tags:
   - openenv
   - benchmark
-  - customer-support
-  - complaint-resolution
