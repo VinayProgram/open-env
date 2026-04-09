@@ -30,7 +30,7 @@ class MyEnv(
     Example:
         >>> # Connect to a running server
         >>> with MyEnv(base_url="http://localhost:8000") as client:
-        ...     result = client.reset(complaint_id="late-delivery")
+        ...     result = client.reset(complaint_id="easy")
         ...     print(result.observation.complaint_text)
         ...
         ...     result = client.step(
@@ -44,7 +44,7 @@ class MyEnv(
         >>> # Automatically start container and connect
         >>> client = MyEnv.from_docker_image("my_env-env:latest")
         >>> try:
-        ...     result = client.reset(complaint_id="billing-error")
+        ...     result = client.reset(complaint_id="hard")
         ...     result = client.step(MyAction(agent_message="I am sorry about the duplicate charge."))
         ... finally:
         ...     client.close()

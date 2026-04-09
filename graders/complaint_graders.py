@@ -60,12 +60,12 @@ GRADER_REGISTRY: dict[str, GraderSpec] = {
 
 def has_grader(task_id: str) -> bool:
     """Return whether the task has a registered grader."""
-    return task_id in GRADER_REGISTRY
+    return task_id in TASK_INDEX
 
 
 def get_grader(task_id: str) -> GraderSpec:
     """Return the registered grader metadata for a task."""
-    return GRADER_REGISTRY[task_id]
+    return GRADER_REGISTRY[TASK_INDEX[task_id].task_id]
 
 
 def list_graders() -> list[dict[str, str]]:
@@ -74,25 +74,25 @@ def list_graders() -> list[dict[str, str]]:
 
 
 def grade_late_delivery(score: float | None = None, success: bool | None = None) -> float:
-    """Normalize the late-delivery task score."""
-    return grade_task_score("late-delivery", score=score, success=success)
+    """Normalize the easy task score."""
+    return grade_task_score("easy", score=score, success=success)
 
 
 def grade_damaged_item(score: float | None = None, success: bool | None = None) -> float:
-    """Normalize the damaged-item task score."""
-    return grade_task_score("damaged-item", score=score, success=success)
+    """Normalize the medium task score."""
+    return grade_task_score("medium", score=score, success=success)
 
 
 def grade_billing_error(score: float | None = None, success: bool | None = None) -> float:
-    """Normalize the billing-error task score."""
-    return grade_task_score("billing-error", score=score, success=success)
+    """Normalize the hard task score."""
+    return grade_task_score("hard", score=score, success=success)
 
 
 def grade_service_outage(score: float | None = None, success: bool | None = None) -> float:
-    """Normalize the service-outage task score."""
-    return grade_task_score("service-outage", score=score, success=success)
+    """Normalize the medium2 task score."""
+    return grade_task_score("medium2", score=score, success=success)
 
 
 def grade_wrong_item(score: float | None = None, success: bool | None = None) -> float:
-    """Normalize the wrong-item task score."""
-    return grade_task_score("wrong-item", score=score, success=success)
+    """Normalize the easy2 task score."""
+    return grade_task_score("easy2", score=score, success=success)

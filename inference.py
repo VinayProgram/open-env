@@ -124,10 +124,19 @@ def parse_task_ids() -> list[str]:
         else:
             requested = list(DEFAULT_TASK_IDS)
 
-    if EXACT_TASK_SET:
-        return list(dict.fromkeys(requested))
+    canonical: list[str] = []
+    for task_id in requested:
+        if task_id in TASK_INDEX:
+            resolved = TASK_INDEX[task_id].task_id
+        else:
+            resolved = task_id
+        if resolved not in canonical:
+            canonical.append(resolved)
 
-    expanded = [*requested, *DEFAULT_TASK_IDS]
+    if EXACT_TASK_SET:
+        return canonical
+
+    expanded = [*canonical, *DEFAULT_TASK_IDS]
     return list(dict.fromkeys(expanded))
 
 

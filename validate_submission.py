@@ -7,12 +7,12 @@ import sys
 from pathlib import Path
 
 from graders import GRADER_MODULE, grade_task_score, has_grader, list_graders
-from tasks import TASKS, build_grader_ref
+from tasks import TASKS, TASK_INDEX, build_grader_ref
 
 
 def build_report() -> dict[str, object]:
     """Build a machine-readable summary of task/grader coverage."""
-    baseline_path = Path("baseline_scores.json")
+    baseline_path = Path(__file__).resolve().with_name("baseline_scores.json")
     baseline_results: dict[str, dict[str, object]] = {}
     if baseline_path.exists():
         try:
@@ -21,8 +21,9 @@ def build_report() -> dict[str, object]:
             payload = {}
         for entry in payload.get("results", []):
             task_id = str(entry.get("task_id", "")).strip()
-            if task_id:
-                baseline_results[task_id] = entry
+            if not task_id or task_id not in TASK_INDEX:
+                continue
+            baseline_results[TASK_INDEX[task_id].task_id] = entry
 
     task_reports: list[dict[str, object]] = []
     for task in TASKS:

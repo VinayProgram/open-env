@@ -6,12 +6,12 @@ import json
 from pathlib import Path
 
 from graders import grade_task_score, list_graders
-from tasks import TASKS, build_grader_ref
+from tasks import TASKS, TASK_INDEX, build_grader_ref
 
 
 def run_baseline() -> dict[str, object]:
     """Return per-task baseline scores in the checker-friendly shape."""
-    baseline_path = Path("baseline_scores.json")
+    baseline_path = Path(__file__).resolve().with_name("baseline_scores.json")
     payload: dict[str, object] = {}
     if baseline_path.exists():
         try:
@@ -19,11 +19,12 @@ def run_baseline() -> dict[str, object]:
         except json.JSONDecodeError:
             payload = {}
 
-    raw_results = {
-        str(entry.get("task_id", "")).strip(): entry
-        for entry in payload.get("results", [])
-        if str(entry.get("task_id", "")).strip()
-    }
+    raw_results: dict[str, dict[str, object]] = {}
+    for entry in payload.get("results", []):
+        task_id = str(entry.get("task_id", "")).strip()
+        if not task_id or task_id not in TASK_INDEX:
+            continue
+        raw_results[TASK_INDEX[task_id].task_id] = entry
 
     tasks: list[dict[str, object]] = []
     for task in TASKS:

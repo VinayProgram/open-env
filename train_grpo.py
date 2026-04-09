@@ -13,7 +13,7 @@
 
 Usage:
     uv run train_grpo.py
-    uv run train_grpo.py --task-ids late-delivery,billing-error
+    uv run train_grpo.py --task-ids easy,hard
     uv run train_grpo.py --hub-model-id your-username/complaint-grpo
 
 This script trains directly against the local complaint environment via TRL's
@@ -199,11 +199,20 @@ def parse_task_ids(raw: str | None) -> list[str]:
         ).strip()
 
     if candidate:
-        task_ids = [part.strip() for part in candidate.split(",") if part.strip()]
+        task_ids: list[str] = []
+        for part in candidate.split(","):
+            raw_task_id = part.strip()
+            if not raw_task_id:
+                continue
+            if raw_task_id in TASK_INDEX:
+                resolved = TASK_INDEX[raw_task_id].task_id
+            else:
+                resolved = raw_task_id
+            if resolved not in task_ids:
+                task_ids.append(resolved)
     else:
         task_ids = [task.task_id for task in TASKS]
 
-    task_ids = list(dict.fromkeys(task_ids))
     unknown = [task_id for task_id in task_ids if task_id not in TASK_INDEX]
     if unknown:
         valid = ", ".join(sorted(TASK_INDEX))

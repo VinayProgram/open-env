@@ -46,7 +46,7 @@ grader_metadata:
     - submission task validation should use grader_score
 
 tasks:
-  - id: late-delivery
+  - id: easy
     name: Late Delivery Recovery
     difficulty: easy
     description: >
@@ -61,52 +61,7 @@ tasks:
     grader_field: grader_score
     grader_type: deterministic
     has_grader: true
-  - id: damaged-item
-    name: Damaged Item Refund Or Replacement
-    difficulty: medium
-    description: >
-      Resolve a damaged-product complaint with a refund or replacement and make
-      it clear the customer will not pay return shipping.
-    max_steps: 6
-    success_threshold: 0.75
-    grader:
-      module: graders.complaint_graders
-      function: grade_damaged_item
-    grader_id: grade_damaged_item
-    grader_field: grader_score
-    grader_type: deterministic
-    has_grader: true
-  - id: billing-error
-    name: Duplicate Charge Resolution
-    difficulty: hard
-    description: >
-      Reverse a duplicate subscription charge, explain the billing follow-up,
-      and reassure the customer that the issue will not recur.
-    max_steps: 7
-    success_threshold: 0.73
-    grader:
-      module: graders.complaint_graders
-      function: grade_billing_error
-    grader_id: grade_billing_error
-    grader_field: grader_score
-    grader_type: deterministic
-    has_grader: true
-  - id: service-outage
-    name: Service Outage Escalation
-    difficulty: medium
-    description: >
-      Handle a service outage complaint with a restoration path, callback or
-      technician escalation, and appropriate compensation.
-    max_steps: 6
-    success_threshold: 0.74
-    grader:
-      module: graders.complaint_graders
-      function: grade_service_outage
-    grader_id: grade_service_outage
-    grader_field: grader_score
-    grader_type: deterministic
-    has_grader: true
-  - id: wrong-item
+  - id: easy2
     name: Wrong Item Exchange
     difficulty: easy
     description: >
@@ -118,6 +73,51 @@ tasks:
       module: graders.complaint_graders
       function: grade_wrong_item
     grader_id: grade_wrong_item
+    grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
+  - id: medium
+    name: Damaged Item Refund Or Replacement
+    difficulty: medium
+    description: >
+      Resolve a damaged-product complaint without charging return shipping, and
+      propose a refund or replacement with clear logistics.
+    max_steps: 6
+    success_threshold: 0.75
+    grader:
+      module: graders.complaint_graders
+      function: grade_damaged_item
+    grader_id: grade_damaged_item
+    grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
+  - id: medium2
+    name: Service Outage Escalation
+    difficulty: medium
+    description: >
+      Handle a service outage complaint by acknowledging the disruption,
+      sharing a restoration path, and offering escalation or compensation.
+    max_steps: 6
+    success_threshold: 0.74
+    grader:
+      module: graders.complaint_graders
+      function: grade_service_outage
+    grader_id: grade_service_outage
+    grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
+  - id: hard
+    name: Duplicate Charge Resolution
+    difficulty: hard
+    description: >
+      Reverse a duplicate subscription charge, explain the billing follow-up,
+      and reassure the customer that the issue will not recur.
+    max_steps: 7
+    success_threshold: 0.73
+    grader:
+      module: graders.complaint_graders
+      function: grade_billing_error
+    grader_id: grade_billing_error
     grader_field: grader_score
     grader_type: deterministic
     has_grader: true

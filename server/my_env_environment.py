@@ -49,7 +49,7 @@ class ComplaintScenario:
 
 SCENARIOS: tuple[ComplaintScenario, ...] = (
     ComplaintScenario(
-        complaint_id="late-delivery",
+        complaint_id="easy",
         task_name="Late Delivery Recovery",
         task_description=(
             "Handle an urgent late-delivery complaint, acknowledge the frustration, "
@@ -81,7 +81,40 @@ SCENARIOS: tuple[ComplaintScenario, ...] = (
         success_threshold=0.72,
     ),
     ComplaintScenario(
-        complaint_id="damaged-item",
+        complaint_id="easy2",
+        task_name="Wrong Item Exchange",
+        task_description=(
+            "Resolve a wrong-item shipment complaint with a correct exchange and "
+            "a no-cost return process."
+        ),
+        difficulty="easy",
+        category="product",
+        customer_name="Kabir",
+        complaint_text=(
+            "I ordered a black medium jacket, but I received a blue small one "
+            "instead. I need the correct item sent quickly and I should not be "
+            "charged for returning your mistake."
+        ),
+        required_keywords=("wrong", "exchange", "return", "correct"),
+        resolution_keywords=("replacement", "exchange", "pickup", "return label"),
+        positive_feedback=(
+            "An exchange with a prepaid return label works for me.",
+            "Thank you, that fixes the wrong item issue.",
+            "Okay, please send the correct jacket and the return label.",
+        ),
+        neutral_feedback=(
+            "Please confirm when the correct item will ship.",
+            "I need the exchange steps explained clearly.",
+        ),
+        negative_feedback=(
+            "You still have not explained how I return the wrong item.",
+            "I need the correct item, not another delay.",
+        ),
+        max_steps=5,
+        success_threshold=0.71,
+    ),
+    ComplaintScenario(
+        complaint_id="medium",
         task_name="Damaged Item Refund Or Replacement",
         task_description=(
             "Resolve a damaged-product complaint without charging return shipping, "
@@ -113,39 +146,7 @@ SCENARIOS: tuple[ComplaintScenario, ...] = (
         success_threshold=0.75,
     ),
     ComplaintScenario(
-        complaint_id="billing-error",
-        task_name="Duplicate Charge Resolution",
-        task_description=(
-            "Reverse a duplicate subscription charge, explain the next billing step, "
-            "and give the customer confidence the issue will not recur."
-        ),
-        difficulty="hard",
-        category="billing",
-        customer_name="Aisha",
-        complaint_text=(
-            "I was charged twice for the same subscription renewal. I need the "
-            "duplicate charge reversed and confirmation that it will not happen again."
-        ),
-        required_keywords=("charge", "billing", "refund", "duplicate"),
-        resolution_keywords=("refund", "reverse", "billing team", "escalate"),
-        positive_feedback=(
-            "If you reverse the extra charge, that resolves it.",
-            "Thanks for explaining the billing reversal.",
-            "Okay, that is the resolution I needed.",
-        ),
-        neutral_feedback=(
-            "I need a timeframe for the refund.",
-            "Please confirm what happens next with the duplicate charge.",
-        ),
-        negative_feedback=(
-            "You still have not addressed the duplicate charge.",
-            "This is not helpful unless the billing issue is fixed.",
-        ),
-        max_steps=7,
-        success_threshold=0.73,
-    ),
-    ComplaintScenario(
-        complaint_id="service-outage",
+        complaint_id="medium2",
         task_name="Service Outage Escalation",
         task_description=(
             "Handle a service outage complaint by acknowledging the disruption, "
@@ -178,37 +179,36 @@ SCENARIOS: tuple[ComplaintScenario, ...] = (
         success_threshold=0.74,
     ),
     ComplaintScenario(
-        complaint_id="wrong-item",
-        task_name="Wrong Item Exchange",
+        complaint_id="hard",
+        task_name="Duplicate Charge Resolution",
         task_description=(
-            "Resolve a wrong-item shipment complaint with a correct exchange and "
-            "a no-cost return process."
+            "Reverse a duplicate subscription charge, explain the next billing step, "
+            "and give the customer confidence the issue will not recur."
         ),
-        difficulty="easy",
-        category="product",
-        customer_name="Kabir",
+        difficulty="hard",
+        category="billing",
+        customer_name="Aisha",
         complaint_text=(
-            "I ordered a black medium jacket, but I received a blue small one "
-            "instead. I need the correct item sent quickly and I should not be "
-            "charged for returning your mistake."
+            "I was charged twice for the same subscription renewal. I need the "
+            "duplicate charge reversed and confirmation that it will not happen again."
         ),
-        required_keywords=("wrong", "exchange", "return", "correct"),
-        resolution_keywords=("replacement", "exchange", "pickup", "return label"),
+        required_keywords=("charge", "billing", "refund", "duplicate"),
+        resolution_keywords=("refund", "reverse", "billing team", "escalate"),
         positive_feedback=(
-            "An exchange with a prepaid return label works for me.",
-            "Thank you, that fixes the wrong item issue.",
-            "Okay, please send the correct jacket and the return label.",
+            "If you reverse the extra charge, that resolves it.",
+            "Thanks for explaining the billing reversal.",
+            "Okay, that is the resolution I needed.",
         ),
         neutral_feedback=(
-            "Please confirm when the correct item will ship.",
-            "I need the exchange steps explained clearly.",
+            "I need a timeframe for the refund.",
+            "Please confirm what happens next with the duplicate charge.",
         ),
         negative_feedback=(
-            "You still have not explained how I return the wrong item.",
-            "I need the correct item, not another delay.",
+            "You still have not addressed the duplicate charge.",
+            "This is not helpful unless the billing issue is fixed.",
         ),
-        max_steps=5,
-        success_threshold=0.71,
+        max_steps=7,
+        success_threshold=0.73,
     ),
 )
 
@@ -479,7 +479,8 @@ class MyEnvironment(Environment[MyAction, MyObservation, MyState]):
             )
 
         if complaint_id:
-            scenario = SCENARIO_INDEX.get(complaint_id)
+            task = TASK_INDEX.get(complaint_id)
+            scenario = SCENARIO_INDEX.get(task.task_id if task is not None else "")
             if scenario is None:
                 available = ", ".join(sorted(SCENARIO_INDEX))
                 raise ValueError(

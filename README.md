@@ -30,11 +30,13 @@ tracks:
 
 | Task ID | Name | Difficulty | Max Steps | Grader |
 |---|---|---|---:|---|
-| `late-delivery` | Late Delivery Recovery | easy | 5 | `grade_late_delivery` -> `grader_score` |
-| `damaged-item` | Damaged Item Refund Or Replacement | medium | 6 | `grade_damaged_item` -> `grader_score` |
-| `billing-error` | Duplicate Charge Resolution | hard | 7 | `grade_billing_error` -> `grader_score` |
-| `service-outage` | Service Outage Escalation | medium | 6 | `grade_service_outage` -> `grader_score` |
-| `wrong-item` | Wrong Item Exchange | easy | 5 | `grade_wrong_item` -> `grader_score` |
+| `easy` | Late Delivery Recovery | easy | 5 | `grade_late_delivery` -> `grader_score` |
+| `easy2` | Wrong Item Exchange | easy | 5 | `grade_wrong_item` -> `grader_score` |
+| `medium` | Damaged Item Refund Or Replacement | medium | 6 | `grade_damaged_item` -> `grader_score` |
+| `medium2` | Service Outage Escalation | medium | 6 | `grade_service_outage` -> `grader_score` |
+| `hard` | Duplicate Charge Resolution | hard | 7 | `grade_billing_error` -> `grader_score` |
+
+Legacy task IDs such as `easy1`, `late-delivery`, `wrong-item`, `damaged-item`, `service-outage`, and `billing-error` still resolve for compatibility, but the canonical public IDs now follow the difficulty-based scheme above.
 
 Every task uses the same output contract: when the episode advances, the
 observation includes `grader_score`, and terminal scores are clamped to remain
