@@ -57,6 +57,11 @@ The repo now also includes explicit submission-facing metadata:
 - `validate_submission.py` prints a machine-readable report with task/grader coverage
 - `baseline_scores.json` stores the latest multi-task baseline scores
 
+The benchmark metadata now uses structured grader references of the form
+`grader: { module: ..., function: ... }`, which matches the newer OpenEnv
+submission format and avoids the "not enough tasks with graders" validator
+failure.
+
 ## Baseline Runner
 
 `inference.py` now guarantees full benchmark coverage by default and writes

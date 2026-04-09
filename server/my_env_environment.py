@@ -26,7 +26,7 @@ try:
 except ImportError:
     from models import MyAction, MyObservation, MyState
 
-from tasks import TASK_INDEX
+from tasks import TASK_INDEX, get_task_dicts
 
 
 @dataclass(frozen=True)
@@ -246,10 +246,12 @@ TASK_SCORE_EPSILON = 0.05
 
 def get_task_catalog() -> list[dict[str, object]]:
     """Return the public benchmark task list for submission validation."""
+    task_dicts = {task["task_id"]: task for task in get_task_dicts()}
     catalog: list[dict[str, object]] = []
     for scenario in SCENARIOS:
         task = TASK_INDEX[scenario.complaint_id]
-        catalog.append(
+        task_dict = dict(task_dicts[scenario.complaint_id])
+        task_dict.update(
             {
                 "id": scenario.complaint_id,
                 "task_id": scenario.complaint_id,
@@ -258,10 +260,6 @@ def get_task_catalog() -> list[dict[str, object]]:
                 "description": scenario.task_description,
                 "max_steps": scenario.max_steps,
                 "success_threshold": scenario.success_threshold,
-                "grader": task.grader,
-                "grader_field": task.grader_field,
-                "grader_type": task.grader_type,
-                "has_grader": True,
                 "grader_metadata": {
                     "type": task.grader_type,
                     "field": task.grader_field,
@@ -269,6 +267,7 @@ def get_task_catalog() -> list[dict[str, object]]:
                 },
             }
         )
+        catalog.append(task_dict)
     return catalog
 
 

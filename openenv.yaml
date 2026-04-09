@@ -1,4 +1,5 @@
 spec_version: 1
+openenv_version: "0.2.0"
 name: my_env
 version: "1.0.0"
 description: >
@@ -11,6 +12,13 @@ type: space
 runtime: fastapi
 app: server.app:app
 port: 8000
+
+action_type: models.MyAction
+observation_type: models.MyObservation
+reward_type: float
+agent:
+  module: inference
+  function: main
 
 client:
   class_name: MyEnv
@@ -25,11 +33,14 @@ observation:
   module: models
 
 grader:
-  type: deterministic
-  field: grader_score
+  module: grader
+  function: grade
   score_range:
     min_exclusive: 0.0
     max_exclusive: 1.0
+grader_metadata:
+  field: grader_score
+  type: deterministic
   notes:
     - step reward remains shaped and may be outside [0, 1]
     - submission task validation should use grader_score
@@ -43,8 +54,13 @@ tasks:
       concrete recovery path such as expedite, refund, or escalation.
     max_steps: 5
     success_threshold: 0.72
-    grader: grade_late_delivery
+    grader:
+      module: graders.complaint_graders
+      function: grade_late_delivery
+    grader_id: grade_late_delivery
     grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
   - id: damaged-item
     name: Damaged Item Refund Or Replacement
     difficulty: medium
@@ -53,8 +69,13 @@ tasks:
       it clear the customer will not pay return shipping.
     max_steps: 6
     success_threshold: 0.75
-    grader: grade_damaged_item
+    grader:
+      module: graders.complaint_graders
+      function: grade_damaged_item
+    grader_id: grade_damaged_item
     grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
   - id: billing-error
     name: Duplicate Charge Resolution
     difficulty: hard
@@ -63,8 +84,13 @@ tasks:
       and reassure the customer that the issue will not recur.
     max_steps: 7
     success_threshold: 0.73
-    grader: grade_billing_error
+    grader:
+      module: graders.complaint_graders
+      function: grade_billing_error
+    grader_id: grade_billing_error
     grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
   - id: service-outage
     name: Service Outage Escalation
     difficulty: medium
@@ -73,8 +99,13 @@ tasks:
       technician escalation, and appropriate compensation.
     max_steps: 6
     success_threshold: 0.74
-    grader: grade_service_outage
+    grader:
+      module: graders.complaint_graders
+      function: grade_service_outage
+    grader_id: grade_service_outage
     grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
   - id: wrong-item
     name: Wrong Item Exchange
     difficulty: easy
@@ -83,8 +114,13 @@ tasks:
       return process.
     max_steps: 5
     success_threshold: 0.71
-    grader: grade_wrong_item
+    grader:
+      module: graders.complaint_graders
+      function: grade_wrong_item
+    grader_id: grade_wrong_item
     grader_field: grader_score
+    grader_type: deterministic
+    has_grader: true
 
 endpoints:
   reset: POST /reset

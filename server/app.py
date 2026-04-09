@@ -82,6 +82,26 @@ LEGACY_API_PREFIXES = (
 )
 
 
+def _task_grader_ref(task: dict[str, object]) -> dict[str, str] | None:
+    grader = task.get("grader")
+    if isinstance(grader, dict):
+        module = str(grader.get("module", "")).strip()
+        function = str(grader.get("function", "")).strip()
+        if module and function:
+            return {"module": module, "function": function}
+    grader_id = str(task.get("grader_id", "")).strip()
+    if grader_id:
+        return {"module": "graders.complaint_graders", "function": grader_id}
+    return None
+
+
+def _task_grader_id(task: dict[str, object]) -> str:
+    grader_ref = _task_grader_ref(task)
+    if grader_ref is not None:
+        return grader_ref["function"]
+    return ""
+
+
 class LegacyApiCompatMiddleware:
     """Rewrite legacy root API paths to the mounted `/api` app."""
 
@@ -157,13 +177,17 @@ api_app.include_router(customer_chat_router)
 async def list_tasks() -> dict[str, object]:
     """Expose the benchmark task catalog for submission validators."""
     tasks = get_task_catalog()
-    graders = sorted({str(task["grader"]) for task in tasks if task.get("grader")})
+    grader_refs = [
+        ref for ref in (_task_grader_ref(task) for task in tasks) if ref is not None
+    ]
+    grader_ids = sorted({ref["function"] for ref in grader_refs})
     return {
         "task_count": len(tasks),
         "tasks_with_graders": sum(1 for task in tasks if task.get("grader")),
-        "grader_count": len(graders),
+        "grader_count": len(grader_ids),
         "graded_task_ids": [task["task_id"] for task in tasks if task.get("grader")],
-        "graders": graders,
+        "grader_ids": grader_ids,
+        "graders": grader_refs,
         "tasks": tasks,
     }
 
@@ -172,16 +196,20 @@ async def list_tasks() -> dict[str, object]:
 async def validate_submission_shape() -> dict[str, object]:
     """Report the submission shape expected by hackathon validators."""
     tasks = get_task_catalog()
-    graders = sorted({str(task["grader"]) for task in tasks if task.get("grader")})
+    grader_refs = [
+        ref for ref in (_task_grader_ref(task) for task in tasks) if ref is not None
+    ]
+    grader_ids = sorted({ref["function"] for ref in grader_refs})
     return {
         "valid": len(tasks) >= 3,
         "env_name": "my_env",
         "version": "1.0.0",
         "task_count": len(tasks),
         "tasks_with_graders": sum(1 for task in tasks if task.get("grader")),
-        "grader_count": len(graders),
+        "grader_count": len(grader_ids),
         "graded_task_ids": [task["task_id"] for task in tasks if task.get("grader")],
-        "graders": graders,
+        "grader_ids": grader_ids,
+        "graders": grader_refs,
         "grader_field": "grader_score",
         "score_range": {"min_exclusive": 0.0, "max_exclusive": 1.0},
         "tasks": tasks,

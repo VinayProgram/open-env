@@ -6,8 +6,8 @@ import json
 import sys
 from pathlib import Path
 
-from graders import grade_task_score, has_grader, list_graders
-from tasks import TASKS
+from graders import GRADER_MODULE, grade_task_score, has_grader, list_graders
+from tasks import TASKS, build_grader_ref
 
 
 def build_report() -> dict[str, object]:
@@ -40,9 +40,11 @@ def build_report() -> dict[str, object]:
                 "task_id": task.task_id,
                 "name": task.name,
                 "difficulty": task.difficulty,
-                "grader": task.grader,
+                "grader_id": task.grader,
+                "grader": build_grader_ref(task.grader),
                 "grader_field": task.grader_field,
                 "grader_type": task.grader_type,
+                "grader_module": GRADER_MODULE,
                 "has_grader": has_grader(task.task_id),
                 "result": result_int,
                 "score": normalized_score,

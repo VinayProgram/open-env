@@ -2,6 +2,7 @@
 
 from .complaint_graders import (
     GRADER_REGISTRY,
+    GRADER_MODULE,
     GraderSpec,
     TASK_SCORE_EPSILON,
     clamp_open_interval,
@@ -18,6 +19,7 @@ from .complaint_graders import (
 
 __all__ = [
     "GRADER_REGISTRY",
+    "GRADER_MODULE",
     "GraderSpec",
     "TASK_SCORE_EPSILON",
     "clamp_open_interval",

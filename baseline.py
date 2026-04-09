@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from graders import grade_task_score, list_graders
-from tasks import TASKS
+from tasks import TASKS, build_grader_ref
 
 
 def run_baseline() -> dict[str, object]:
@@ -37,7 +37,8 @@ def run_baseline() -> dict[str, object]:
         tasks.append(
             {
                 "task_id": task.task_id,
-                "grader": task.grader,
+                "grader_id": task.grader,
+                "grader": build_grader_ref(task.grader),
                 "grader_field": task.grader_field,
                 "grader_type": task.grader_type,
                 "result": result,

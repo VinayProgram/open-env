@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
+GRADER_MODULE = "graders.complaint_graders"
+
 
 @dataclass(frozen=True)
 class TaskSpec:
@@ -18,6 +20,14 @@ class TaskSpec:
     grader: str
     grader_field: str = "grader_score"
     grader_type: str = "deterministic"
+
+
+def build_grader_ref(grader: str) -> dict[str, str]:
+    """Return the structured grader reference expected by submission validators."""
+    return {
+        "module": GRADER_MODULE,
+        "function": grader,
+    }
 
 
 TASKS: tuple[TaskSpec, ...] = (
@@ -88,4 +98,14 @@ TASK_INDEX = {task.task_id: task for task in TASKS}
 
 def get_task_dicts() -> list[dict[str, object]]:
     """Return JSON-serializable task dictionaries."""
-    return [asdict(task) for task in TASKS]
+    task_dicts: list[dict[str, object]] = []
+    for task in TASKS:
+        task_dicts.append(
+            {
+                **asdict(task),
+                "grader_id": task.grader,
+                "grader": build_grader_ref(task.grader),
+                "has_grader": True,
+            }
+        )
+    return task_dicts

@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 
 from tasks import TASK_INDEX
 
+GRADER_MODULE = "graders.complaint_graders"
 TASK_SCORE_EPSILON = 0.05
 
 
@@ -15,6 +16,7 @@ class GraderSpec:
 
     task_id: str
     grader_id: str
+    module: str = GRADER_MODULE
     field: str = "grader_score"
     grader_type: str = "deterministic"
 
@@ -45,6 +47,7 @@ def _build_grader_spec(task_id: str) -> GraderSpec:
     return GraderSpec(
         task_id=task_id,
         grader_id=task.grader,
+        module=GRADER_MODULE,
         field=task.grader_field,
         grader_type=task.grader_type,
     )

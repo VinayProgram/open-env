@@ -12,7 +12,7 @@ from typing import Any, Optional
 
 from dotenv import load_dotenv
 from openai import OpenAI
-from tasks import TASKS, TASK_INDEX
+from tasks import TASKS, TASK_INDEX, build_grader_ref
 
 load_dotenv()
 
@@ -355,7 +355,8 @@ async def run_task(
     )
     return {
         "task_id": task_id,
-        "grader": TASK_INDEX[task_id].grader,
+        "grader_id": TASK_INDEX[task_id].grader,
+        "grader": build_grader_ref(TASK_INDEX[task_id].grader),
         "grader_field": TASK_INDEX[task_id].grader_field,
         "grader_type": TASK_INDEX[task_id].grader_type,
         "result": result_int,
@@ -402,10 +403,15 @@ async def main() -> None:
         if results
         else 0.0
     )
+    grader_ids = {
+        str(result["grader_id"])
+        for result in results
+        if result.get("grader_id")
+    }
     summary = {
         "valid": all(0.0 < float(result["score"]) < 1.0 for result in results),
         "tasks_with_graders": sum(1 for result in results if result.get("grader")),
-        "grader_count": len({str(result["grader"]) for result in results if result.get("grader")}),
+        "grader_count": len(grader_ids),
         "graded_task_ids": [
             str(result["task_id"]) for result in results if result.get("grader")
         ],
@@ -413,6 +419,7 @@ async def main() -> None:
             {
                 "task_id": task.task_id,
                 "grader_id": task.grader,
+                "grader": build_grader_ref(task.grader),
                 "field": task.grader_field,
                 "grader_type": task.grader_type,
             }
