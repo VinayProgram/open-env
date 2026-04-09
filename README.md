@@ -82,3 +82,13 @@ uvicorn server.app:app --reload --host 0.0.0.0 --port 8000
 ```bash
 python inference.py
 ```
+
+## GRPO Training
+
+```bash
+uv run train_grpo.py
+```
+
+Use `--task-ids` to focus on a subset of complaints, `--examples-per-task` to
+scale the prompt set, and `--hub-model-id` if you want the final adapter pushed
+to the Hub.
