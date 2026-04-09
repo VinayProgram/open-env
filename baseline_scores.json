@@ -79,18 +79,18 @@
       "grader_field": "grader_score",
       "grader_type": "deterministic",
       "result": 1,
-      "score": 0.7795,
+      "score": 0.4965,
       "success": true,
       "steps": 6,
-      "resolution_status": "resolved",
-      "average_reward": 0.5833,
+      "resolution_status": "escalated",
+      "average_reward": 0.45,
       "rewards": [
         1.0,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
+        -0.1,
+        1.0,
+        -0.1,
+        1.0,
+        -0.1
       ]
     },
     {
@@ -103,18 +103,18 @@
       "grader_field": "grader_score",
       "grader_type": "deterministic",
       "result": 1,
-      "score": 0.3942,
+      "score": 0.2964,
       "success": true,
       "steps": 6,
       "resolution_status": "escalated",
-      "average_reward": 0.3817,
+      "average_reward": 0.38,
       "rewards": [
-        1.0,
-        0.26,
-        0.26,
-        0.26,
-        0.26,
-        0.25
+        0.86,
+        -0.1,
+        0.86,
+        -0.1,
+        0.86,
+        -0.1
       ]
     },
     {
@@ -127,13 +127,13 @@
       "grader_field": "grader_score",
       "grader_type": "deterministic",
       "result": 1,
-      "score": 0.4923,
+      "score": 0.4965,
       "success": true,
       "steps": 6,
       "resolution_status": "escalated",
-      "average_reward": 0.4267,
+      "average_reward": 0.45,
       "rewards": [
-        0.86,
+        1.0,
         -0.1,
         1.0,
         -0.1,
@@ -190,6 +190,6 @@
       ]
     }
   ],
-  "average_score": 0.5568,
+  "average_score": 0.4815,
   "task_count": 5
 }
